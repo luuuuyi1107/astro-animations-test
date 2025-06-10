@@ -1,28 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("overlay");
+
   if (location.pathname !== "/") {
     localStorage.setItem("pathname", location.pathname);
     location.href = "/";
+    return;
   }
 
-  if (location.pathname === "/" && localStorage.getItem("pathname")) {
+
+  const storedPath = localStorage.getItem("pathname");
+  if (location.pathname === "/" && storedPath) {
+    // 等一下再滑入
     setTimeout(async () => {
-      const res = await fetch(localStorage.getItem("pathname"));
+      const res = await fetch(storedPath);
       const html = await res.text();
       const content = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1];
+      
       if (content) {
         overlay.innerHTML = content;
         overlay.classList.remove("translate-x-full");
       }
-      history.pushState({ overlay: true }, "", localStorage.getItem("pathname"));
-      localStorage.setItem("pathname", "");
+      history.pushState({ overlay: true }, "", storedPath);
+      localStorage.removeItem("pathname");
     }, 10);
-    
   }
- 
-  
-  const overlay = document.getElementById("overlay");
 
-  // 點擊 overlay-link 時攔截
   document.body.addEventListener("click", async (e) => {
     const link = e.target.closest(".overlay-link");
     if (!link) return;
@@ -30,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const href = link.getAttribute("href");
 
-    // 如果點擊的是首頁，就觸發滑出動畫
     if (href === "/") {
       overlay.classList.add("translate-x-full");
       history.pushState({}, "", href);
@@ -38,10 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const res = await fetch(href);
-    console.log(href);
     const html = await res.text();
     const content = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1];
-
     if (content) {
       overlay.innerHTML = content;
       overlay.classList.remove("translate-x-full");
@@ -50,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
     history.pushState({ overlay: true }, "", href);
   });
 
-  // popstate 處理：回首頁就滑出 overlay
   window.addEventListener("popstate", (e) => {
     if (!e.state?.overlay) {
       overlay.classList.add("translate-x-full");
