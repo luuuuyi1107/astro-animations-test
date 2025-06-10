@@ -3,13 +3,14 @@
 import '../styles/tailwind.css';
 ---
 
-<html lang="en" class="max-w-[640px] mx-auto overflow-hidden">
+<html lang="en" class="w-[100vw] max-w-[640px] mx-auto overflow-hidden">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Astro Overlay Slide</title>
     <script type="module" src="/main.js"></script>
   </head>
-  <body class="bg-white text-black relative overflow-hidden ">
+  <body class="bg-white text-black relative overflow-hidden">
     <main class="relative z-0 h-full w-full">
       <slot />
     </main>
