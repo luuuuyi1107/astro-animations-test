@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout>
+  <div class="p-4 w-full h-full bg-[#ff8a8a]">
+    <div class="p-4 bg-white rounded-lg shadow-md">
+      <h1 class="text-3xl font-bold mb-4">主畫面</h1>
+      <p class="mb-4">這是主畫面，會永遠保留在背景。</p>
+      <div class="flex flex-col gap-4">
+        <a href="/detail_1" class="text-blue-600 underline overlay-link">前往詳情頁面 1</a>
+        <a href="/detail_2" class="text-blue-600 underline overlay-link">前往詳情頁面 2</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
