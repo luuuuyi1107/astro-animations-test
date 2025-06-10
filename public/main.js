@@ -1,8 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
-
   if (location.pathname !== "/") {
+    localStorage.setItem("pathname", location.pathname);
     location.href = "/";
   }
+
+  if (location.pathname === "/" && localStorage.getItem("pathname")) {
+    setTimeout(async () => {
+      const res = await fetch(localStorage.getItem("pathname"));
+      const html = await res.text();
+      const content = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1];
+      if (content) {
+        overlay.innerHTML = content;
+        overlay.classList.remove("translate-x-full");
+      }
+      history.pushState({ overlay: true }, "", localStorage.getItem("pathname"));
+      localStorage.setItem("pathname", "");
+    }, 10);
+    
+  }
+ 
   
   const overlay = document.getElementById("overlay");
 
@@ -22,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const res = await fetch(href);
+    console.log(href);
     const html = await res.text();
     const content = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1];
 
