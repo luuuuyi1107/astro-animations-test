@@ -1,16 +1,20 @@
-<html lang="en">
+---
+// 引入 Tailwind CSS（正確方式）
+import '../styles/tailwind.css';
+---
+
+<html lang="en" class="max-w-[640px] mx-auto overflow-hidden">
   <head>
     <meta charset="UTF-8" />
     <title>Astro Overlay Slide</title>
-    <link rel="stylesheet" href="/src/styles/tailwind.css" />
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/main.js"></script>
   </head>
-  <body class="bg-white text-black relative overflow-hidden">
+  <body class="bg-white text-black relative overflow-hidden ">
     <main class="relative z-0 h-full w-full">
       <slot />
     </main>
     <!-- Overlay container -->
-    <div id="overlay" class="fixed inset-0 z-10 translate-x-full transition-transform duration-500 bg-white shadow-xl"></div>
+    <div id="overlay" class="absolute inset-0 z-10 translate-x-full transition-transform duration-500 bg-white shadow-xl"></div>
   </body>
 </html>
 <style>
