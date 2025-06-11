@@ -1,6 +1,8 @@
 ---
 // 引入 Tailwind CSS（正確方式）
-import '../styles/tailwind.css';
+import "../styles/tailwind.css"
+import { ClientRouter } from "astro:transitions"
+import { slide } from "astro:transitions"
 ---
 
 <html lang="en" class="w-[100vw] max-w-[640px] mx-auto overflow-hidden">
@@ -8,10 +10,11 @@ import '../styles/tailwind.css';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Astro Overlay Slide</title>
-    <script type="module" src="/main.js"></script>
+    <!-- <script type="module" src="/main.js"></script> -->
+    <ClientRouter />
   </head>
   <body class="bg-white text-black relative overflow-hidden">
-    <main class="relative z-0 h-full w-full">
+    <main class="relative z-0 h-full w-full" transition:animate={slide({ duration: "0.4s" })}>
       <slot />
     </main>
     <!-- Overlay container -->
@@ -19,7 +22,8 @@ import '../styles/tailwind.css';
   </body>
 </html>
 <style>
-  html, body {
+  html,
+  body {
     height: 100%;
     width: 100%;
   }
