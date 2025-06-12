@@ -2,7 +2,33 @@
 // 引入 Tailwind CSS（正確方式）
 import "../styles/tailwind.css"
 import { ClientRouter } from "astro:transitions"
-import { slide } from "astro:transitions"
+const anim_forwards = {
+  old: {
+    name: "slide-out",
+    duration: "0.4s",
+  },
+  new: {
+    name: "slide-in",
+    duration: "0.4s",
+  },
+};
+const anim_backwards = {
+  old: {
+    name: "slide-in",
+    duration: "0.4s",
+    direction: "reverse",
+  },
+  new: {
+    name: "slide-out",
+    duration: "0.4s",
+    direction: "reverse",
+  },
+};
+
+const customTransition = {
+  forwards: anim_forwards,
+  backwards: anim_backwards,
+};
 ---
 
 <html lang="en" class="w-[100vw] max-w-[640px] mx-auto overflow-hidden">
@@ -10,21 +36,44 @@ import { slide } from "astro:transitions"
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Astro Overlay Slide</title>
-    <!-- <script type="module" src="/main.js"></script> -->
     <ClientRouter />
   </head>
-  <body class="bg-white text-black relative overflow-hidden">
-    <main class="relative z-0 h-full w-full" transition:animate={slide({ duration: "0.4s" })}>
-      <slot />
-    </main>
-    <!-- Overlay container -->
-    <div id="overlay" class="absolute inset-0 bg-white shadow-lg z-20 duration-300 translate-x-full"></div>
+  <body class="overflow-hidden">
+    <div class="relative w-full h-full max-w-[640px] mx-auto overflow-hidden">
+      <main
+        class="absolute inset-0 w-full h-full"
+        transition:animate={customTransition}
+      >
+        <slot />
+      </main>
+    </div>
   </body>
 </html>
-<style>
+<style is:global>
   html,
   body {
     height: 100%;
     width: 100%;
+  }
+
+  @keyframes slide-out {
+    0% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes slide-in {
+    0% {
+      opacity: 1;
+      transform: translateX(100%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 </style>
