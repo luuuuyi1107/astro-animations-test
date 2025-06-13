@@ -11,7 +11,7 @@ const anim_forwards = {
     name: "slide-in",
     duration: "0.4s",
   },
-};
+}
 const anim_backwards = {
   old: {
     name: "slide-in",
@@ -23,12 +23,12 @@ const anim_backwards = {
     duration: "0.4s",
     direction: "reverse",
   },
-};
+}
 
 const customTransition = {
   forwards: anim_forwards,
   backwards: anim_backwards,
-};
+}
 ---
 
 <html lang="en" class="w-[100vw] max-w-[640px] mx-auto overflow-hidden">
@@ -36,14 +36,11 @@ const customTransition = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Astro Overlay Slide</title>
-    <ClientRouter fallback="swap" />
+    <ClientRouter />
   </head>
   <body class="overflow-hidden">
     <div class="relative w-full h-full max-w-[640px] mx-auto overflow-hidden">
-      <main
-        class="absolute inset-0 w-full h-full"
-        transition:animate={customTransition}
-      >
+      <main class="absolute inset-0 w-full h-full">
         <slot />
       </main>
     </div>
