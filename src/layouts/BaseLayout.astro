@@ -1,7 +1,8 @@
 ---
-// 引入 Tailwind CSS（正確方式）
+// 引入 Tailwind CSS（正确方式）
 import "../styles/tailwind.css"
 import { ClientRouter } from "astro:transitions"
+
 const anim_forwards = {
   old: {
     name: "slide-out",
@@ -29,6 +30,8 @@ const customTransition = {
   forwards: anim_forwards,
   backwards: anim_backwards,
 }
+
+
 ---
 
 <html lang="en" class="w-[100vw] max-w-[640px] mx-auto overflow-hidden">
@@ -36,7 +39,7 @@ const customTransition = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Astro Overlay Slide</title>
-    <ClientRouter />
+    <ClientRouter transition:animate={customTransition} />
   </head>
   <body class="overflow-hidden">
     <div class="relative w-full h-full max-w-[640px] mx-auto overflow-hidden">
@@ -46,6 +49,14 @@ const customTransition = {
     </div>
   </body>
 </html>
+
+<script>
+  import { useApi } from  "../libs/Api";
+  useApi("base").getPush().then(console.log)
+
+  // 初始化
+</script>
+
 <style is:global>
   html,
   body {

@@ -1,0 +1,6 @@
+{
+	"get_push": {
+		"method": "get",
+		"uri": "User/GetPush"
+	}
+}
