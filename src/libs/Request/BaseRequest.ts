@@ -13,11 +13,34 @@ export default class BaseRequest<T extends Record<string, iConfig>> {
   private readonly SuccessCode = 1
 
   protected async request(actionKey: keyof T, data: any = {}, option: Partial<iOption> = {}): Promise<any> {
-    const search = new URLSearchParams(location.href.split("?")[1])
+    // const search = new URLSearchParams(window.location.href.split("?")[1])
 
-    const token = search.get("token") ?? ""
+    const token = ""
 
     const config: iConfig = this.config[actionKey]
+
+    const processedData = Object.fromEntries(
+    Object.entries(data).map(([key, value]) => {
+      // 处理字符串
+      if (typeof value === 'string') {
+        return [key, decodeURIComponent(encodeURIComponent(value))];
+      }
+      // 处理数组 - 确保数组被正确序列化
+      if (Array.isArray(value)) {
+        // 对于简单数组，可以使用 key[] 格式
+        // 或者针对特定的参数进行特殊处理
+        if (key === 'keys') {
+          // 如果后端期望的是逗号分隔的字符串
+          return [key, value.join(',')];
+          
+          // 或者如果后端期望的是 keys[]=value1&keys[]=value2 格式
+          // 在这种情况下应该在 axios 配置中设置 paramsSerializer
+        }
+      }
+      return [key, value];
+    })
+  );
+
     return axios({
       baseURL: this.baseUrls.join("/"),
       method: config.method,
@@ -28,6 +51,7 @@ export default class BaseRequest<T extends Record<string, iConfig>> {
       ...{
         [config.method.toUpperCase() === "GET" ? "params" : "data"]: {
           Authorization: token,
+          ...processedData
           // ..._.mapValues(data, (value) => decodeURIComponent(encodeURIComponent(value))),
         },
       },

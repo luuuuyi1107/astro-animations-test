@@ -1,0 +1,352 @@
+---
+import { useApi } from "../libs/Api";
+import { GetPushKeysEnum } from "../libs/constants";
+
+// 可以选择在伺服器端做初始请求，或者完全依赖客户端
+try {
+  const data = await useApi("base").getPush({keys: [GetPushKeysEnum.LOTTERY_RATE]})
+  console.log(data.Code)
+} catch (e) {
+  console.error('Initial API request failed:', e);
+}
+---
+
+<div class="api-component" data-component="api-data">
+  <!-- 载入状态 -->
+  <div class="loading-indicator" style="display: none;">
+    <span>正在载入资料...</span>
+    <div class="spinner"></div>
+  </div>
+  
+  <!-- 错误状态 -->
+  <div class="error" style="display: none;">
+    <h3>错误</h3>
+    <p class="error-message"></p>
+    <button class="retry-btn">重试</button>
+  </div>
+  
+  <!-- 资料容器 -->
+  <div class="data-container">
+    <div class="header">
+      <h3>API 资料 (每3秒更新)</h3>
+      <div class="status-info">
+        <span class="last-update">最后更新: <span class="timestamp">载入中...</span></span>
+        <span class="update-count">更新次数: <span class="count">0</span></span>
+        <button class="pause-btn" data-paused="false">暂停更新</button>
+      </div>
+    </div>
+    
+    <div class="data-list">
+      <div>DATA</div>
+      <div class="no-data">等待资料载入...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { useApi } from "../libs/Api";
+  // 客户端脚本处理定时 API 请求和事件触发
+  document.addEventListener('DOMContentLoaded', function() {
+    const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
+    
+    if (!apiComponent) return;
+    
+    // 取得 DOM 元素
+    const loadingIndicator = apiComponent.querySelector('.loading-indicator') as HTMLElement;
+    const errorDiv = apiComponent.querySelector('.error') as HTMLElement;
+    const errorMessage = apiComponent.querySelector('.error-message') as HTMLElement;
+    const retryBtn = apiComponent.querySelector('.retry-btn') as HTMLElement;
+    const dataContainer = apiComponent.querySelector('.data-container') as HTMLElement;
+    const timestampSpan = apiComponent.querySelector('.timestamp') as HTMLElement;
+    const countSpan = apiComponent.querySelector('.count') as HTMLElement;
+    const pauseBtn = apiComponent.querySelector('.pause-btn') as HTMLElement;
+    
+    let updateCount = 0;
+    let isPaused = false;
+    let intervalId: number | null = null;
+    
+    // API 请求函数
+    async function fetchApiData(): Promise<any> {
+      const data = await useApi("base").getPush({lotteryid: 21})
+      console.log(data.Code)
+      console.log({ data })
+      
+      return data
+    }
+    
+    // 显示载入状态
+    function showLoading() {
+      loadingIndicator.style.display = 'block';
+      errorDiv.style.display = 'none';
+    }
+    
+    // 隐藏载入状态
+    function hideLoading() {
+      loadingIndicator.style.display = 'none';
+    }
+    
+    // 显示错误
+    function showError(message: string) {
+      hideLoading();
+      errorMessage.textContent = message;
+      errorDiv.style.display = 'block';
+      dataContainer.style.display = 'none';
+    }
+    
+    // 更新资料显示
+    function updateDataDisplay(data: any) {
+      hideLoading();
+      errorDiv.style.display = 'none';
+      dataContainer.style.display = 'block';
+      updateCount++;
+      timestampSpan.textContent = new Date().toLocaleTimeString();
+      countSpan.textContent = updateCount.toString();
+      
+      // 触发资料更新事件
+      const updateEvent = new CustomEvent('api-data-updated', {
+        detail: {
+          data: data,
+          updateCount: updateCount,
+          timestamp: new Date().toISOString()
+        },
+        bubbles: true
+      });
+      document.dispatchEvent(updateEvent);
+    }
+    
+    // 执行 API 请求
+    async function performApiRequest() {
+      if (isPaused) return;
+      
+      try {
+        showLoading();
+        const data = await fetchApiData();
+        updateDataDisplay(data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        showError(message);
+        console.error('API request failed:', error);
+      }
+    }
+    
+    // 开始定时请求
+    function startPolling() {
+      // 立即执行一次
+      performApiRequest();
+      
+      // 设定每 3 秒请求一次
+      intervalId = window.setInterval(performApiRequest, 30000);
+    }
+    
+    // 停止定时请求
+    function stopPolling() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+    
+    // 暂停/恢复按钮事件
+    pauseBtn.addEventListener('click', function() {
+      isPaused = !isPaused;
+      pauseBtn.textContent = isPaused ? '恢复更新' : '暂停更新';
+      pauseBtn.setAttribute('data-paused', isPaused.toString());
+      
+      if (isPaused) {
+        hideLoading();
+      } else {
+        performApiRequest();
+      }
+    });
+    
+    // 重试按钮事件
+    retryBtn.addEventListener('click', function() {
+      performApiRequest();
+    });
+    
+    
+    
+    // 开始轮询
+    startPolling();
+
+    // 页面卸载时清理定时器
+    window.addEventListener('beforeunload', function() {
+      stopPolling();
+    });
+    
+  });
+</script>
+
+<style>
+  .api-component {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 1rem 0;
+    position: relative;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .status-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.9em;
+    flex-wrap: wrap;
+  }
+  
+  .status-info span {
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+  }
+  
+  .pause-btn {
+    background: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+  }
+  
+  .pause-btn:hover {
+    background: #e0a800;
+  }
+  
+  .pause-btn[data-paused="true"] {
+    background: #28a745;
+    color: white;
+  }
+  
+  .loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #e3f2fd;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #2196f3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .error {
+    color: #dc3545;
+    padding: 1rem;
+    background: #f8d7da;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  .retry-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  
+  .retry-btn:hover {
+    background: #c82333;
+  }
+  
+  .initial-error, .no-data {
+    padding: 2rem;
+    text-align: center;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px dashed #dee2e6;
+  }
+  
+  .data-list {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .data-item {
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background: #f9f9f9;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .data-item:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .data-item h4 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+  }
+  
+  .data-item p {
+    margin: 0 0 1rem 0;
+    color: #666;
+    line-height: 1.5;
+  }
+  
+  .trigger-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .trigger-btn:hover {
+    background: #0056b3;
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .status-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+</style>

@@ -6,8 +6,7 @@ import { GetPushKeysEnum } from "../../constants";
 export default class BaseRequest extends iBaseRequest<typeof config> {
   protected config = config
 
-  async getPush(data?: Partial<{ keys: GetPushKeysEnum[] }>): Promise<iResponse<iGetPush>> {
-    const res: iResponse<iGetPush> = await this.request("get_push", data)
-    return res
+  async getPush(data?: Partial<{ keys: GetPushKeysEnum[], lotteryid: number }>): ApiPromise<iGetPush> {
+    return this.request("get_push", data)
   }
 }
