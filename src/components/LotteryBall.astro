@@ -32,9 +32,12 @@ const { ballLength = 6 } = Astro.props as Props;
 
   function init () {
     const balls = Array.from(document.querySelectorAll('.ball'));
+    
      // 监听 API 资料更新事件
     document.addEventListener('api-data-updated', function(data) {
+      stopAnimation()
       if (data.detail.data.OpenLottery.LastKai.KaiText) {
+        
         const ballNums = data.detail.data.OpenLottery.LastKai.KaiText.split(",")
         balls.forEach((ball, index) => {
           updateBall(ball, ballNums[index]);
@@ -58,7 +61,8 @@ const { ballLength = 6 } = Astro.props as Props;
 
     // 更新单一球的显示
     function updateBall(ballElement, num) {
-      const _num = num || getRandomNumber(1, 9).toString().padStart(1, '0')
+      const _num = num || getRandomNumber(1, 49).toString().padStart(1, '0')
+
       const color = getColorByNumber(_num)
       // 添加转换效果
       if (ballElement.textContent === _num + "") return
@@ -70,41 +74,36 @@ const { ballLength = 6 } = Astro.props as Props;
     
     // 更新所有球
     function updateAllBalls() {
-      balls.forEach(updateBall);
+      balls.forEach((el) => updateBall(el));
     }
     
     // 开始动画
     function startAnimation() {
       if (isAnimating) return;
-      
       isAnimating = true;
-      // 先更新一次
       updateAllBalls();
-      
-      // 设置定时器每0.5秒更新一次
-      animationInterval = setInterval(updateAllBalls, 300);
+      animationInterval = setInterval(updateAllBalls, 500);
     }
     
     // 停止动画
     function stopAnimation() {
       if (!isAnimating) return;
-      
       clearInterval(animationInterval);
       isAnimating = false;
-      startButton.disabled = false;
-      stopButton.disabled = true;
     }
-    
-    
+    startAnimation()
     // 当页面不可见时暂停动画 (节省资源)
     document.addEventListener('visibilitychange', function() {
       if (document.hidden && isAnimating) {
         clearInterval(animationInterval);
       } else if (!document.hidden && isAnimating) {
-        animationInterval = setInterval(updateAllBalls, 300);
+        updateAllBalls()
+        animationInterval = setInterval(updateAllBalls, 500);
       }
     });
   }
+
+  
 
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('astro:page-load', init);

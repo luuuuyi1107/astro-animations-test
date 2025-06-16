@@ -106,7 +106,6 @@ const { class: customClass = "" } = Astro.props as Props;
     }
     // 执行 API 请求
     async function performApiRequest() {
-
       try {
         updateDataDisplay(await useApi("base").getPush({lotteryid: 21}));
       } catch (error) {
