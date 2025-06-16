@@ -44,6 +44,7 @@ const customTransition = {
   <body class="overflow-hidden">
     <div class="relative w-full h-full max-w-[640px] mx-auto overflow-hidden">
       <main class="absolute inset-0 w-full h-full">
+        <slot name="header" />
         <slot />
       </main>
     </div>
