@@ -1,5 +1,6 @@
 
 ---
+import { ZodiacnimalMap } from "@/libs/constants";
 type Props = {
   ballLength?: number;
 };
@@ -7,34 +8,33 @@ type Props = {
 const { ballLength = 6 } = Astro.props as Props;
 ---
 
-<div class="lottery-balls-container">
-  <h3>模拟开奖号码</h3>
-  
+<div class="lottery-balls-container">  
   <div class="flex items-center space-x-1">
-    <!-- 六颗普通球 -->
     {
       Array.from({ length: ballLength }, () => (
-        <div class="ball">?</div>
+        <div class="ball">
+          <div class="num" />
+          <div class="text" />
+        </div>
       ))
     }
-    
-    <!-- 分隔符 -->
     <div class="ball-separator">+</div>
     
-    <!-- 特别球 -->
-    <div class="ball" id="specialBall">?</div>
+    <div class="ball">
+      <div class="num" />
+      <div class="text" />
+    </div>
   </div>
   
 </div>
 
-<script define:vars={{ballLength}}>
+<script define:vars={{ballLength, ZodiacnimalMap}}>
   document.addEventListener('DOMContentLoaded', function() {
     const balls = Array.from(document.querySelectorAll('.ball'));
      // 监听 API 资料更新事件
     document.addEventListener('api-data-updated', function(data) {
       if (data.detail.data.OpenLottery.LastKai.KaiText) {
         const ballNums = data.detail.data.OpenLottery.LastKai.KaiText.split(",")
-        
         balls.forEach((ball, index) => {
           updateBall(ball, ballNums[index]);
         });
@@ -62,7 +62,9 @@ const { ballLength = 6 } = Astro.props as Props;
       // 添加转换效果
       if (ballElement.textContent === _num + "") return
       ballElement.setAttribute("class", `ball ${color}`);
-      ballElement.textContent = _num;
+      // ballElement.textContent = _num;
+      ballElement.getElementsByClassName('num')[0].textContent = _num;
+      ballElement.getElementsByClassName('text')[0].textContent = ZodiacnimalMap[_num % 12] || "22";
     }
     
     // 更新所有球
@@ -106,16 +108,22 @@ const { ballLength = 6 } = Astro.props as Props;
 
 <style>
 .lottery-balls-container .ball {
-  @apply w-6 h-6 rounded-full text-white text-center leading-6;
+  .num {
+    @apply w-5 h-5 rounded-full text-white text-center leading-5 text-xs bg-red-600;
+  }
 
-  &.blue {
+  &.blue .num {
     @apply bg-blue-600;
   }
-  &.green {
+  &.green .num {
     @apply bg-green-600;
   }
-  &.red {
+  &.red .num {
     @apply bg-red-600;
+  }
+
+  .text {
+    @apply text-center min-h-5;
   }
 }
 

@@ -7,7 +7,7 @@ export default class BaseRequest<T extends Record<string, iConfig>> {
   protected config: T = {} as T
 
   protected get baseUrls() {
-    return [import.meta.env.PUBLIC_API_HOST]
+    return [import.meta.env.PUBLIC_API_HOST || "https://611851.com/"]
   }
 
   private readonly SuccessCode = 1

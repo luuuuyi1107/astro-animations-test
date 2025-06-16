@@ -1,5 +1,10 @@
 ---
 import LotteryBall from "./LotteryBall.astro";
+type Props = {
+  class?: string;
+};
+
+const { class: customClass = "" } = Astro.props as Props;
 ---
 
 
@@ -10,22 +15,11 @@ import LotteryBall from "./LotteryBall.astro";
   document.addEventListener('DOMContentLoaded', function() {
     const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
     if (!apiComponent) return; // 取得 DOM 元素
-    const loadingIndicator = apiComponent.querySelector('.loading-indicator') as HTMLElement;
     const dataContainer = apiComponent.querySelector('.data-container') as HTMLElement;
     
     let updateCount = 0;
     let intervalId: number | null = null;
-    
-    // 显示载入状态
-    function showLoading() {
-      loadingIndicator.style.display = 'block';
-    }
-    
-    // 隐藏载入状态
-    function hideLoading() {
-      loadingIndicator.style.display = 'none';
-    }
-
+  
     // 格式化倒数时间为 HH:MM:SS
     function formatCountdown(totalSeconds: number): string {
       if (totalSeconds <= 0) return "00:00:00";
@@ -56,26 +50,17 @@ import LotteryBall from "./LotteryBall.astro";
       
       // 计时器函数
       function tick() {
+        if (!countDownElement) return;
         // 减少一秒
         secondsLeft--;
         
         // 更新 DOM
         countDownElement.textContent = formatCountdown(Math.max(0, secondsLeft));
         
-        // 添加颜色提示
-        countDownElement.className = '';
-        if (secondsLeft <= 30) {
-          countDownElement.classList.add('urgent');
-        } else if (secondsLeft <= 60) {
-          countDownElement.classList.add('warning');
-        }
-        
         // 如果倒数结束，停止更新
         if (secondsLeft <= 0) {
           clearInterval(timerInterval);
           countDownElement.textContent = "开奖中...";
-          countDownElement.classList.add('complete');
-          
           // 可选：5秒后自动重新载入数据
           setTimeout(() => performApiRequest(), 5000);
         }
@@ -93,7 +78,6 @@ import LotteryBall from "./LotteryBall.astro";
     
     // 更新资料显示
     function updateDataDisplay(data: any) {
-      hideLoading();
       dataContainer.style.display = 'block';
       updateCount++;
       // 触发资料更新事件
@@ -125,7 +109,6 @@ import LotteryBall from "./LotteryBall.astro";
     async function performApiRequest() {
 
       try {
-        showLoading();
         updateDataDisplay(await useApi("base").getPush({lotteryid: 21}));
       } catch (error) {
         console.error('API request failed:', error);
@@ -211,30 +194,21 @@ import LotteryBall from "./LotteryBall.astro";
   });
 </script>
 
-<div class="api-component" data-component="api-data">
-  <!-- 载入状态 -->
-  <div class="loading-indicator" style="display: none;">
-    <span>正在载入资料...</span>
-    <div class="spinner"></div>
-  </div>
-  
-
+<div class={"api-component " + customClass} data-component="api-data">
   <!-- 资料容器 -->
-  <div class="data-container text-sm">
+  <div class="data-container text-[13px]">
     <div class="flex justify-between items-center w-full">
       <div>
-        <span id="lastKaiGameID" class="font-[400] mr-1" />
+        <span id="lastKaiGameID" class="font-[600] mr-1">2025000</span>
         期开奖结果
       </div>
       <div class="text-red-400">余额: 9342.00元</div>
     </div>
     <LotteryBall ballLength={6} />
-    <div>
-      <span id="newKaiGameID"  class="font-[400] mr-1" />
+    <div class="border-y border-gray-200 py-2 mt-2 leading-none">
+      <span id="newKaiGameID"  class="font-[600] mr-1">2025000</span>
       投注截止时间
-      <span id="countDown" />
+      <span class="text-red-600" id="countDown" />
     </div>
   </LotteryBall>
 </div>
-
-

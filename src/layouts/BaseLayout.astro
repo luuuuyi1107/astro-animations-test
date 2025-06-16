@@ -34,15 +34,15 @@ const customTransition = {
 
 ---
 
-<html lang="en" class="w-[100vw] max-w-[640px] mx-auto overflow-hidden">
+<html lang="en" class="w-[100vw] max-w-[640px] mx-auto">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Astro Overlay Slide</title>
     <ClientRouter transition:animate={customTransition} />
   </head>
-  <body class="overflow-hidden">
-    <div class="relative w-full h-full max-w-[640px] mx-auto overflow-hidden">
+  <body class="overflow-auto bg-[#fafafa]">
+    <div class="relative w-full h-full max-w-[640px] mx-auto">
       <main class="absolute inset-0 w-full h-full">
         <slot />
       </main>
