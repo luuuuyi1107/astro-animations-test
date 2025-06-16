@@ -41,7 +41,9 @@ const { class: customClass = "" } = Astro.props as Props;
 
     // 更新资料显示
     function updateDataDisplay(data: iGetPush) {
+      dataContainer.style.display = 'block';
       updateCount++;
+      
       // 触发资料更新事件
       const updateEvent = new CustomEvent('getpush-lottery-updated', {
         detail: {
@@ -70,7 +72,7 @@ const { class: customClass = "" } = Astro.props as Props;
 
     // 处理游戏状态变化
     function handleGameStateChange(data: iGetPush) {
-      if (!data?.ServerTime || !data?.OpenLottery?.NewKai || !data.OpenLottery.NewKai.GameID) {
+      if (!data?.ServerTime || !data?.OpenLottery?.NewKai || !data.OpenLottery.NewKai.EndTime || !data.OpenLottery.NewKai.GameID) {
         console.warn('缺少必要的数据');
         return;
       }
@@ -152,6 +154,7 @@ const { class: customClass = "" } = Astro.props as Props;
     async function initialize() {
       console.log('初始化彩票数据...');
       const data = await fetchApiData();
+      sessionStorage.setItem('lotteryData', JSON.stringify(data));
       if (data) {
         updateDataDisplay(data);
       } else {
@@ -168,14 +171,23 @@ const { class: customClass = "" } = Astro.props as Props;
       currentGameID = null;
     }
 
+    
+
+    if (sessionStorage.getItem('lotteryData')) {
+      const cachedData = JSON.parse(sessionStorage.getItem('lotteryData') || '{}');
+      if (cachedData) {
+        updateDataDisplay(cachedData);
+      }
+    }
+
     // 开始初始化
     initialize();
 
     // 页面卸载时清理
     window.addEventListener('beforeunload', cleanup);
     
-    // // 提供手动刷新功能
-    // (window as any).refreshLotteryData = initialize;
+    // 提供手动刷新功能
+    (window as any).refreshLotteryData = initialize;
   }
 
   document.addEventListener('astro:page-load', initLotterData);
