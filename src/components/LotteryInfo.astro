@@ -1,14 +1,4 @@
 ---
-import { useApi } from "../libs/Api";
-import { GetPushKeysEnum } from "../libs/constants";
-
-// 可以选择在伺服器端做初始请求，或者完全依赖客户端
-try {
-  const data = await useApi("base").getPush({keys: [GetPushKeysEnum.LOTTERY_RATE]})
-  console.log(data.Code)
-} catch (e) {
-  console.error('Initial API request failed:', e);
-}
 ---
 
 <div class="api-component" data-component="api-data">
@@ -65,15 +55,6 @@ try {
     let isPaused = false;
     let intervalId: number | null = null;
     
-    // API 请求函数
-    async function fetchApiData(): Promise<any> {
-      const data = await useApi("base").getPush({lotteryid: 21})
-      console.log(data.Code)
-      console.log({ data })
-      
-      return data
-    }
-    
     // 显示载入状态
     function showLoading() {
       loadingIndicator.style.display = 'block';
@@ -117,11 +98,15 @@ try {
     // 执行 API 请求
     async function performApiRequest() {
       if (isPaused) return;
-      
+
       try {
         showLoading();
-        const data = await fetchApiData();
+        const data = await useApi("base").getPush({lotteryid: 21})
         updateDataDisplay(data);
+        // 在成功獲取資料後，開始計算時間並設置輪詢
+        if (data.Data && data.Data.OpenLottery && data.Data.ServerTime) {
+          startPollingAfterEndTime(data.Data);
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         showError(message);
@@ -129,13 +114,13 @@ try {
       }
     }
     
-    // 开始定时请求
+    // // 开始定时请求
     function startPolling() {
       // 立即执行一次
       performApiRequest();
       
       // 设定每 3 秒请求一次
-      intervalId = window.setInterval(performApiRequest, 30000);
+      // intervalId = window.setInterval(performApiRequest, 30000);
     }
     
     // 停止定时请求
@@ -164,8 +149,57 @@ try {
       performApiRequest();
     });
     
-    
-    
+    async function startPollingAfterEndTime(data: iGetPush) {
+      const serverTime = new Date(data.ServerTime).getTime();
+      const endTime = new Date(data.OpenLottery?.NewKai.EndTime).getTime();
+      const lastKaiTime = new Date(data.OpenLottery?.LastKai.KaiTime).getTime();
+      const newKaiTime = new Date(data.OpenLottery?.NewKai.KaiTime).getTime();
+
+      // 計算剩餘時間
+      const timeUntilEnd = endTime - serverTime;
+
+      if (timeUntilEnd > 0) {
+        console.log(`等待 ${timeUntilEnd / 1000} 秒後開始輪詢`);
+        // 設置倒計時
+        setTimeout(() => {
+          console.log('EndTime 到達，開始輪詢 API');
+          startPollingForNewGameID(data.OpenLottery.NewKai.GameID);
+        }, timeUntilEnd);
+      } else {
+        console.log('EndTime 已過，立即開始輪詢 API');
+        startPollingForNewGameID(data.OpenLottery.NewKai.GameID);
+      }
+    }
+
+    function startPollingForNewGameID(currentGameID: number) {
+      const pollingInterval = 3000; // 每 3 秒輪詢一次
+      let pollingTimer = null;
+
+      console.log('開始輪詢 API，當前 GameID:', currentGameID);
+
+      async function pollApi() {
+        try {
+          // const data = await fetchApiData(); // 假設 fetchApiData 是已定義的 API 請求函數
+          const data = await useApi("base").getPush({lotteryid: 21})
+          console.log('輪詢 API 獲取資料:', data);
+          const newGameID = data.Data?.OpenLottery?.NewKai?.GameID;
+          console.log('輪詢 API，當前 GameID:', currentGameID, '新 GameID:', newGameID);
+          if (newGameID !== currentGameID) {
+            console.log('檢測到新的 GameID:', newGameID);
+            clearInterval(pollingTimer); // 停止輪詢
+          } else {
+            console.log('尚未檢測到新的 GameID，繼續輪詢...');
+            console.log({ newGameID, currentGameID });
+          }
+        } catch (error) {
+          console.error('輪詢 API 時發生錯誤:', error);
+        }
+      }
+
+      // 開始輪詢
+      pollingTimer = setInterval(pollApi, pollingInterval);
+    }
+
     // 开始轮询
     startPolling();
 

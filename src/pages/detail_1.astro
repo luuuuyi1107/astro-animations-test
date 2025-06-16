@@ -1,25 +1,15 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro"
-import Lottery from "../components/Lottery.astro"
+import Lottery from "../components/LotteryInfo.astro"
 ---
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // 监听 API 组件载入事件
-    document.addEventListener('api-component-loaded', function(data) {
-      console.log('API 组件已载入', data);
-    });
-    
     // 监听 API 资料更新事件
     document.addEventListener('api-data-updated', function(data) {
       console.log('API 资料已更新', data);
     });
-    
-    
-    // 监听处理完成事件
-    document.addEventListener('data-processed', function(event) {
-      console.log('资料处理完成', event);
-    });
+
   });
 </script>
 
