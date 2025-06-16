@@ -1,123 +1,138 @@
 ---
+import LotteryBall from "./LotteryBall.astro";
 ---
 
-<div class="api-component" data-component="api-data">
-  <!-- 载入状态 -->
-  <div class="loading-indicator" style="display: none;">
-    <span>正在载入资料...</span>
-    <div class="spinner"></div>
-  </div>
-  
-  <!-- 错误状态 -->
-  <div class="error" style="display: none;">
-    <h3>错误</h3>
-    <p class="error-message"></p>
-    <button class="retry-btn">重试</button>
-  </div>
-  
-  <!-- 资料容器 -->
-  <div class="data-container">
-    <div class="header">
-      <h3>API 资料 (每3秒更新)</h3>
-      <div class="status-info">
-        <span class="last-update">最后更新: <span class="timestamp">载入中...</span></span>
-        <span class="update-count">更新次数: <span class="count">0</span></span>
-        <button class="pause-btn" data-paused="false">暂停更新</button>
-      </div>
-    </div>
-    
-    <div class="data-list">
-      <div>DATA</div>
-      <div class="no-data">等待资料载入...</div>
-    </div>
-  </div>
-</div>
 
 <script>
   import { parseJsonDate } from "@/libs/Common";
-import { useApi } from "../libs/Api";
-  // 客户端脚本处理定时 API 请求和事件触发
+  import { useApi } from "../libs/Api";
+  
   document.addEventListener('DOMContentLoaded', function() {
     const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
-    
-    if (!apiComponent) return;
-    
-    // 取得 DOM 元素
+    if (!apiComponent) return; // 取得 DOM 元素
     const loadingIndicator = apiComponent.querySelector('.loading-indicator') as HTMLElement;
-    const errorDiv = apiComponent.querySelector('.error') as HTMLElement;
-    const errorMessage = apiComponent.querySelector('.error-message') as HTMLElement;
-    const retryBtn = apiComponent.querySelector('.retry-btn') as HTMLElement;
     const dataContainer = apiComponent.querySelector('.data-container') as HTMLElement;
-    const timestampSpan = apiComponent.querySelector('.timestamp') as HTMLElement;
-    const countSpan = apiComponent.querySelector('.count') as HTMLElement;
-    const pauseBtn = apiComponent.querySelector('.pause-btn') as HTMLElement;
     
     let updateCount = 0;
-    let isPaused = false;
     let intervalId: number | null = null;
     
     // 显示载入状态
     function showLoading() {
       loadingIndicator.style.display = 'block';
-      errorDiv.style.display = 'none';
     }
     
     // 隐藏载入状态
     function hideLoading() {
       loadingIndicator.style.display = 'none';
     }
+
+    // 格式化倒数时间为 HH:MM:SS
+    function formatCountdown(totalSeconds: number): string {
+      if (totalSeconds <= 0) return "00:00:00";
+      
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
+      
+      return [
+        hours.toString().padStart(2, '0'),
+        minutes.toString().padStart(2, '0'),
+        seconds.toString().padStart(2, '0')
+      ].join(':');
+    }
     
-    // 显示错误
-    function showError(message: string) {
-      hideLoading();
-      errorMessage.textContent = message;
-      errorDiv.style.display = 'block';
-      dataContainer.style.display = 'none';
+    // 使用服务器提供的剩余时间启动倒数计时
+    function startCountdownFromSeconds(remainingSeconds: number) {
+      const countDownElement = document.getElementById('countDown');
+      if (!countDownElement) return;
+      
+      // 清除现有计时器
+      if (countDownElement.dataset.timerId) {
+        clearInterval(parseInt(countDownElement.dataset.timerId));
+      }
+      
+      // 存储初始剩余秒数
+      let secondsLeft = remainingSeconds;
+      
+      // 计时器函数
+      function tick() {
+        // 减少一秒
+        secondsLeft--;
+        
+        // 更新 DOM
+        countDownElement.textContent = formatCountdown(Math.max(0, secondsLeft));
+        
+        // 添加颜色提示
+        countDownElement.className = '';
+        if (secondsLeft <= 30) {
+          countDownElement.classList.add('urgent');
+        } else if (secondsLeft <= 60) {
+          countDownElement.classList.add('warning');
+        }
+        
+        // 如果倒数结束，停止更新
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          countDownElement.textContent = "开奖中...";
+          countDownElement.classList.add('complete');
+          
+          // 可选：5秒后自动重新载入数据
+          setTimeout(() => performApiRequest(), 5000);
+        }
+      }
+      
+      // 立即执行一次
+      countDownElement.textContent = formatCountdown(secondsLeft);
+      
+      // 设置每秒更新
+      const timerInterval = setInterval(tick, 1000);
+      
+      // 保存计时器 ID
+      countDownElement.dataset.timerId = String(timerInterval);
     }
     
     // 更新资料显示
     function updateDataDisplay(data: any) {
       hideLoading();
-      errorDiv.style.display = 'none';
       dataContainer.style.display = 'block';
       updateCount++;
-      timestampSpan.textContent = new Date().toLocaleTimeString();
-      countSpan.textContent = updateCount.toString();
-      
       // 触发资料更新事件
       const updateEvent = new CustomEvent('api-data-updated', {
         detail: {
-          data: data,
+          data: data.Data,
           updateCount: updateCount,
           timestamp: new Date().toISOString()
         },
         bubbles: true
       });
       document.dispatchEvent(updateEvent);
+
+      const LastKaiGameIDSpan = document.getElementById('lastKaiGameID');
+      if (LastKaiGameIDSpan) {
+        LastKaiGameIDSpan.textContent = data.Data?.OpenLottery?.LastKai?.GameID || '无资料';
+      }
+
+      const newKaiGameIDSpan = document.getElementById('newKaiGameID');
+      if (newKaiGameIDSpan) {
+        newKaiGameIDSpan.textContent = data.Data?.OpenLottery?.NewKai?.GameID || '无资料';
+      }
+
+      if (data.Data && data.Data.OpenLottery && data.Data.ServerTime) {
+        startPollingAfterEndTime(data.Data);
+      }
     }
-    
     // 执行 API 请求
     async function performApiRequest() {
-      if (isPaused) return;
 
       try {
         showLoading();
-        const data = await useApi("base").getPush({lotteryid: 21})
-        updateDataDisplay(data);
-        // 在成功获取资料后，开始计算时间并设置轮询
-        if (data.Data && data.Data.OpenLottery && data.Data.ServerTime) {
-          startPollingAfterEndTime(data.Data);
-        }
+        updateDataDisplay(await useApi("base").getPush({lotteryid: 21}));
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        showError(message);
         console.error('API request failed:', error);
       }
     }
     
-    // // 开始定时请求
     function startPolling() {
-      // 立即执行一次
       performApiRequest();
     }
     
@@ -129,62 +144,49 @@ import { useApi } from "../libs/Api";
       }
     }
     
-    // 暂停/恢复按钮事件
-    pauseBtn.addEventListener('click', function() {
-      isPaused = !isPaused;
-      pauseBtn.textContent = isPaused ? '恢复更新' : '暂停更新';
-      pauseBtn.setAttribute('data-paused', isPaused.toString());
-      
-      if (isPaused) {
-        hideLoading();
-      } else {
-        performApiRequest();
-      }
-    });
-    
-    // 重试按钮事件
-    retryBtn.addEventListener('click', function() {
-      performApiRequest();
-    });
     
     async function startPollingAfterEndTime(data: iGetPush) {
       const serverTime = parseJsonDate(data.ServerTime).getTime();
       const endTime = parseJsonDate(data.OpenLottery?.NewKai?.EndTime).getTime();
       // const lastKaiTime = parseJsonDate(data.OpenLottery?.LastKai.KaiTime);
       // const newKaiTime = parseJsonDate(data.OpenLottery?.NewKai.KaiTime);
+      const newKaiGameID = data.OpenLottery?.NewKai?.GameID;
 
       // 计算剩余时间
       const timeUntilEnd = endTime - serverTime;
-
+      if (!newKaiGameID) {
+        console.warn('NewKai GameID 不存在，无法开始轮询');
+        return;
+      }
       if (timeUntilEnd > 0) {
         console.log(`等待 ${timeUntilEnd / 1000} 秒后开始轮询`);
         // 设置倒计时
         setTimeout(() => {
           console.log('EndTime 到达，开始轮询 API');
-          startPollingForNewGameID(data.OpenLottery?.NewKai?.GameID);
+          startPollingForNewGameID(newKaiGameID);
         }, timeUntilEnd);
+
+        startCountdownFromSeconds(Math.ceil(timeUntilEnd / 1000)); // 启动倒计时
+
       } else {
         console.log('EndTime 已过，立即开始轮询 API');
-        startPollingForNewGameID(data.OpenLottery?.NewKai?.GameID);
+        startPollingForNewGameID(newKaiGameID);
       }
     }
 
-    function startPollingForNewGameID(currentGameID: number) {
+    function startPollingForNewGameID(currentGameID: string) {
       const pollingInterval = 3000; // 每 3 秒轮询一次
-      let pollingTimer = null;
-
-      console.log('开始轮询 API，当前 GameID:', currentGameID);
-
+      let pollingTimer: ReturnType<typeof setInterval> | null = null;
       async function pollApi() {
         try {
           // const data = await fetchApiData(); // 假设 fetchApiData 是已定义的 API 请求函数
           const data = await useApi("base").getPush({lotteryid: 21})
           console.log('轮询 API 获取资料:', data);
           const newGameID = data.Data?.OpenLottery?.NewKai?.GameID;
-          console.log('轮询 API，当前 GameID:', currentGameID, '新 GameID:', newGameID);
+          // console.log('轮询 API，当前 GameID:', currentGameID, '新 GameID:', newGameID);
           if (newGameID !== currentGameID) {
             console.log('检测到新的 GameID:', newGameID);
-            clearInterval(pollingTimer); // 停止轮询
+            pollingTimer && clearInterval(pollingTimer); // 停止轮询
           } else {
             console.log('尚未检测到新的 GameID，继续轮询...');
             console.log({ newGameID, currentGameID });
@@ -209,176 +211,30 @@ import { useApi } from "../libs/Api";
   });
 </script>
 
-<style>
-  .api-component {
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin: 1rem 0;
-    position: relative;
-  }
+<div class="api-component" data-component="api-data">
+  <!-- 载入状态 -->
+  <div class="loading-indicator" style="display: none;">
+    <span>正在载入资料...</span>
+    <div class="spinner"></div>
+  </div>
   
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  
-  .status-info {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    font-size: 0.9em;
-    flex-wrap: wrap;
-  }
-  
-  .status-info span {
-    background: #f8f9fa;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
-  }
-  
-  .pause-btn {
-    background: #ffc107;
-    color: #212529;
-    border: none;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.2s;
-  }
-  
-  .pause-btn:hover {
-    background: #e0a800;
-  }
-  
-  .pause-btn[data-paused="true"] {
-    background: #28a745;
-    color: white;
-  }
-  
-  .loading-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: #e3f2fd;
-    border-radius: 4px;
-    margin: 1rem 0;
-  }
-  
-  .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #2196f3;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .error {
-    color: #dc3545;
-    padding: 1rem;
-    background: #f8d7da;
-    border-radius: 4px;
-    margin: 1rem 0;
-  }
-  
-  .retry-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 0.5rem;
-    transition: background-color 0.2s;
-  }
-  
-  .retry-btn:hover {
-    background: #c82333;
-  }
-  
-  .initial-error, .no-data {
-    padding: 2rem;
-    text-align: center;
-    color: #6c757d;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px dashed #dee2e6;
-  }
-  
-  .data-list {
-    display: grid;
-    gap: 1rem;
-  }
-  
-  .data-item {
-    padding: 1rem;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    background: #f9f9f9;
-    transition: all 0.3s ease;
-    animation: fadeIn 0.5s ease-in;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .data-item:hover {
-    background: #f0f0f0;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  
-  .data-item h4 {
-    margin: 0 0 0.5rem 0;
-    color: #333;
-  }
-  
-  .data-item p {
-    margin: 0 0 1rem 0;
-    color: #666;
-    line-height: 1.5;
-  }
-  
-  .trigger-btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .trigger-btn:hover {
-    background: #0056b3;
-  }
-  
-  /* 响应式设计 */
-  @media (max-width: 768px) {
-    .header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .status-info {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-    }
-  }
-</style>
+
+  <!-- 资料容器 -->
+  <div class="data-container text-sm">
+    <div class="flex justify-between items-center w-full">
+      <div>
+        <span id="lastKaiGameID" class="font-[400] mr-1" />
+        期开奖结果
+      </div>
+      <div class="text-red-400">余额: 9342.00元</div>
+    </div>
+    <LotteryBall ballLength={6} />
+    <div>
+      <span id="newKaiGameID"  class="font-[400] mr-1" />
+      投注截止时间
+      <span id="countDown" />
+    </div>
+  </LotteryBall>
+</div>
+
+

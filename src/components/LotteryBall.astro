@@ -1,0 +1,123 @@
+
+---
+type Props = {
+  ballLength?: number;
+};
+
+const { ballLength = 6 } = Astro.props as Props;
+---
+
+<div class="lottery-balls-container">
+  <h3>模拟开奖号码</h3>
+  
+  <div class="flex items-center space-x-1">
+    <!-- 六颗普通球 -->
+    {
+      Array.from({ length: ballLength }, () => (
+        <div class="ball">?</div>
+      ))
+    }
+    
+    <!-- 分隔符 -->
+    <div class="ball-separator">+</div>
+    
+    <!-- 特别球 -->
+    <div class="ball" id="specialBall">?</div>
+  </div>
+  
+</div>
+
+<script define:vars={{ballLength}}>
+  document.addEventListener('DOMContentLoaded', function() {
+    const balls = Array.from(document.querySelectorAll('.ball'));
+     // 监听 API 资料更新事件
+    document.addEventListener('api-data-updated', function(data) {
+      if (data.detail.data.OpenLottery.LastKai.KaiText) {
+        const ballNums = data.detail.data.OpenLottery.LastKai.KaiText.split(",")
+        
+        balls.forEach((ball, index) => {
+          updateBall(ball, ballNums[index]);
+        });
+      } else {
+        startAnimation()
+      }
+    });
+
+    let animationInterval = null;
+    let isAnimating = false;
+    // 生成随机数字 (1-49 用于普通球, 1-8 用于特别球)
+    function getRandomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function getColorByNumber(num) {
+      const _num = num % 3
+      return _num === 0 ? "red" : _num === 1 ? "green" : "blue"
+    }
+
+    // 更新单一球的显示
+    function updateBall(ballElement, num) {
+      const _num = num || getRandomNumber(1, 9).toString().padStart(1, '0')
+      const color = getColorByNumber(_num)
+      // 添加转换效果
+      if (ballElement.textContent === _num + "") return
+      ballElement.setAttribute("class", `ball ${color}`);
+      ballElement.textContent = _num;
+    }
+    
+    // 更新所有球
+    function updateAllBalls() {
+      balls.forEach(updateBall);
+    }
+    
+    // 开始动画
+    function startAnimation() {
+      if (isAnimating) return;
+      
+      isAnimating = true;
+      // 先更新一次
+      updateAllBalls();
+      
+      // 设置定时器每0.5秒更新一次
+      animationInterval = setInterval(updateAllBalls, 300);
+    }
+    
+    // 停止动画
+    function stopAnimation() {
+      if (!isAnimating) return;
+      
+      clearInterval(animationInterval);
+      isAnimating = false;
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    }
+    
+    
+    // 当页面不可见时暂停动画 (节省资源)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden && isAnimating) {
+        clearInterval(animationInterval);
+      } else if (!document.hidden && isAnimating) {
+        animationInterval = setInterval(updateAllBalls, 300);
+      }
+    });
+  });
+</script>
+
+<style>
+.lottery-balls-container .ball {
+  @apply w-6 h-6 rounded-full text-white text-center leading-6;
+
+  &.blue {
+    @apply bg-blue-600;
+  }
+  &.green {
+    @apply bg-green-600;
+  }
+  &.red {
+    @apply bg-red-600;
+  }
+}
+
+
+</style>

@@ -1,27 +1,38 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro"
 import LotteryInfo from "../components/LotteryInfo.astro"
+import config from "../libs/game/lhc";
+console.log("config", config);
 ---
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // 监听 API 资料更新事件
-    document.addEventListener('api-data-updated', function(data) {
-      console.log('API 资料已更新', data);
-    });
+  // document.addEventListener('DOMContentLoaded', function() {
+  //   // 监听 API 资料更新事件
+  //   document.addEventListener('api-data-updated', function(data) {
+  //     console.log('API 资料已更新', data);
+  //   });
 
-  });
+  // });
+  
 </script>
 
 <BaseLayout>
   <LotteryInfo />
-  <div class="p-4 w-full h-full bg-[#8bc0d4]">
-    <div class="p-4 bg-white rounded-lg shadow-md">
-      <h1 class="text-3xl font-semibold mb-2">详情页面 1</h1>
-      <p class="mb-4">这是从右侧滑入的画面。</p>
-      <a onclick="history.back()" class="text-blue-600 underline overlay-link cursor-pointer">返回主页</a>
+  <div class="p-2">
+    {
+      config.map((item) => (
+        <div class="p-2">
+          <h2 class="text-lg font-bold">{item.title}</h2>
+          {/* <div class="grid grid-cols-3 gap-4">
+            {
+              item.balls.map((ball) => (
+                <div class={`ball ${ball.color}`}>{ball.number}</div>
+              ))
+            }
+          </div> */}
+        </div>
+      ))
+    }
 
-
-    </div>
   </div>
 </BaseLayout>
