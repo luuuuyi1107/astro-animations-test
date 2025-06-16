@@ -12,7 +12,7 @@ const { class: customClass = "" } = Astro.props as Props;
   import { parseJsonDate } from "@/libs/Common";
   import { useApi } from "../libs/Api";
   
-  document.addEventListener('DOMContentLoaded', function() {
+  function initLotterData () {
     const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
     if (!apiComponent) return; // 取得 DOM 元素
     const dataContainer = apiComponent.querySelector('.data-container') as HTMLElement;
@@ -23,7 +23,6 @@ const { class: customClass = "" } = Astro.props as Props;
     // 格式化倒数时间为 HH:MM:SS
     function formatCountdown(totalSeconds: number): string {
       if (totalSeconds <= 0) return "00:00:00";
-      
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = Math.floor(totalSeconds % 60);
@@ -34,7 +33,7 @@ const { class: customClass = "" } = Astro.props as Props;
         seconds.toString().padStart(2, '0')
       ].join(':');
     }
-    
+
     // 使用服务器提供的剩余时间启动倒数计时
     function startCountdownFromSeconds(remainingSeconds: number) {
       const countDownElement = document.getElementById('countDown');
@@ -190,8 +189,11 @@ const { class: customClass = "" } = Astro.props as Props;
     window.addEventListener('beforeunload', function() {
       stopPolling();
     });
-    
-  });
+  }
+
+  document.addEventListener('DOMContentLoaded', initLotterData);
+  document.addEventListener('astro:page-load', initLotterData);
+
 </script>
 
 <div class={"api-component " + customClass} data-component="api-data">
@@ -210,5 +212,5 @@ const { class: customClass = "" } = Astro.props as Props;
       投注截止时间
       <span class="text-red-600" id="countDown" />
     </div>
-  </LotteryBall>
+  </div>
 </div>

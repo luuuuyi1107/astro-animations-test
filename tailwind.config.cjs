@@ -4,7 +4,11 @@ module.exports = {
     "./src/**/*.{astro,html,js,jsx,ts,tsx,vue,svelte}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        theme: "#f77e04"
+      }
+    },
   },
   plugins: [],
 }

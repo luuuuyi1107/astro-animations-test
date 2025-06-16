@@ -29,7 +29,8 @@ const { ballLength = 6 } = Astro.props as Props;
 </div>
 
 <script define:vars={{ballLength, ZodiacnimalMap}}>
-  document.addEventListener('DOMContentLoaded', function() {
+
+  function init () {
     const balls = Array.from(document.querySelectorAll('.ball'));
      // 监听 API 资料更新事件
     document.addEventListener('api-data-updated', function(data) {
@@ -103,7 +104,10 @@ const { ballLength = 6 } = Astro.props as Props;
         animationInterval = setInterval(updateAllBalls, 300);
       }
     });
-  });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('astro:page-load', init);
 </script>
 
 <style>

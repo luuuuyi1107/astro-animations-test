@@ -2,21 +2,13 @@
 import BaseLayout from "../layouts/BaseLayout.astro"
 import LotteryInfo from "../components/LotteryInfo.astro"
 import config from "../libs/game/lhc";
-console.log("config", config);
+import Header from "@/components/Header.astro";
 ---
 
-<script>
-  // document.addEventListener('DOMContentLoaded', function() {
-  //   // 监听 API 资料更新事件
-  //   document.addEventListener('api-data-updated', function(data) {
-  //     console.log('API 资料已更新', data);
-  //   });
-
-  // });
-  
-</script>
-
 <BaseLayout>
+  <div slot="header" class="bg-theme text-white h-11">
+    <Header title="新澳门⑥合彩" />
+  </div>
   <div class=" bg-white min-h-svh">
   
   <LotteryInfo class="px-4" />
