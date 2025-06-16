@@ -1,0 +1,201 @@
+---
+import Balls from "./Balls.astro";
+import Countdown from "./Countdown.astro";
+
+type Props = {
+  class?: string;
+};
+
+const { class: customClass = "" } = Astro.props as Props;
+---
+
+<script>
+  import { parseJsonDate } from "@/libs/Common";
+  import { useApi } from "@/libs/Api";
+
+  const POLLING_INTERVAL = 3000; // 3秒轮询间隔
+  
+  function initLotterData() {
+    const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
+    if (!apiComponent) return;
+    
+    const dataContainer = apiComponent.querySelector('.data-container') as HTMLElement;
+    let updateCount = 0;
+    let currentPollingTimer: ReturnType<typeof setInterval> | null = null;
+    let currentGameID: string | null = null;
+    let isWaitingForEndTime = false;
+
+    // 统一的 API 请求函数
+    async function fetchApiData(): Promise<iGetPush | null> {
+      try {
+        const response = await useApi("base").getPush({lotteryid: 21});
+        if (!response || !response.Data) {
+          throw new Error('无有效数据返回');
+        }
+        return response.Data;
+      } catch (error) {
+        console.error('API request failed:', error);
+        return null;
+      }
+    }
+
+    // 更新资料显示
+    function updateDataDisplay(data: iGetPush) {
+      updateCount++;
+      // 触发资料更新事件
+      const updateEvent = new CustomEvent('getpush-lottery-updated', {
+        detail: {
+          data,
+          updateCount: updateCount,
+          timestamp: new Date().toISOString()
+        },
+        bubbles: true
+      });
+      document.dispatchEvent(updateEvent);
+
+      // 更新 UI 元素
+      const LastKaiGameIDSpan = document.getElementById('lastKaiGameID');
+      if (LastKaiGameIDSpan) {
+        LastKaiGameIDSpan.textContent = data?.OpenLottery?.LastKai?.GameID || '无资料';
+      }
+
+      const newKaiGameIDSpan = document.getElementById('newKaiGameID');
+      if (newKaiGameIDSpan) {
+        newKaiGameIDSpan.textContent = data?.OpenLottery?.NewKai?.GameID || '无资料';
+      }
+
+      // 检查是否需要开始倒计时或轮询
+      handleGameStateChange(data);
+    }
+
+    // 处理游戏状态变化
+    function handleGameStateChange(data: iGetPush) {
+      if (!data?.ServerTime || !data?.OpenLottery?.NewKai || !data.OpenLottery.NewKai.GameID) {
+        console.warn('缺少必要的数据');
+        return;
+      }
+
+      const serverTime = parseJsonDate(data.ServerTime).getTime();
+      const endTime = parseJsonDate(data.OpenLottery.NewKai.EndTime).getTime();
+      const newGameID = data.OpenLottery.NewKai.GameID;
+
+      // 如果 GameID 变了，说明有新一期开始
+      if (currentGameID && currentGameID !== newGameID) {
+        console.log('检测到新的 GameID:', newGameID, '旧的:', currentGameID);
+        stopCurrentPolling();
+        isWaitingForEndTime = false;
+      }
+
+      currentGameID = newGameID;
+
+      // 计算剩余时间
+      const timeUntilEnd = endTime - serverTime;
+
+      if (timeUntilEnd > 0 && !isWaitingForEndTime) {
+        // 还有时间，开始倒计时
+        startCountdownMode(timeUntilEnd, newGameID);
+      } else if (timeUntilEnd <= 0 && !currentPollingTimer) {
+        // 时间已过，开始轮询模式
+        startPollingMode(newGameID);
+      }
+    }
+
+    // 开始倒计时模式
+    function startCountdownMode(timeUntilEnd: number, gameID: string) {
+      console.log(`开始倒计时模式，等待 ${timeUntilEnd / 1000} 秒`);
+      isWaitingForEndTime = true;
+      
+      const remainingSeconds = Math.ceil(timeUntilEnd / 1000);
+      
+      // 启动倒计时组件
+      (window as any).startCountdown('countDown', remainingSeconds, () => {
+        console.log('倒计时结束，切换到轮询模式');
+        isWaitingForEndTime = false;
+        startPollingMode(gameID);
+      });
+    }
+
+    // 开始轮询模式
+    function startPollingMode(gameID: string) {
+      console.log('开始轮询模式，监听 GameID 变化');
+      
+      // 停止现有轮询
+      stopCurrentPolling();
+      
+      // 开始新的轮询
+      currentPollingTimer = setInterval(async () => {
+        const data = await fetchApiData();
+        if (data) {
+          const newGameID = data.OpenLottery?.NewKai?.GameID;
+          
+          if (newGameID !== gameID) {
+            console.log('检测到新的 GameID，更新数据');
+            stopCurrentPolling();
+            updateDataDisplay(data);
+          } else {
+            console.log('GameID 未变化，继续轮询...', { current: gameID, new: newGameID });
+          }
+        }
+      }, POLLING_INTERVAL);
+    }
+
+    // 停止当前轮询
+    function stopCurrentPolling() {
+      if (currentPollingTimer) {
+        clearInterval(currentPollingTimer);
+        currentPollingTimer = null;
+        console.log('已停止轮询');
+      }
+    }
+
+    // 初始化 - 获取第一次数据
+    async function initialize() {
+      console.log('初始化彩票数据...');
+      const data = await fetchApiData();
+      if (data) {
+        updateDataDisplay(data);
+      } else {
+        // 如果初始请求失败，3秒后重试
+        setTimeout(initialize, 3000);
+      }
+    }
+
+    // 清理函数
+    function cleanup() {
+      stopCurrentPolling();
+      (window as any).stopCountdown?.('countDown');
+      isWaitingForEndTime = false;
+      currentGameID = null;
+    }
+
+    // 开始初始化
+    initialize();
+
+    // 页面卸载时清理
+    window.addEventListener('beforeunload', cleanup);
+    
+    // // 提供手动刷新功能
+    // (window as any).refreshLotteryData = initialize;
+  }
+
+  document.addEventListener('astro:page-load', initLotterData);
+</script>
+
+<div class={"api-component " + customClass} data-component="api-data">
+  <!-- 资料容器 -->
+  <div class="data-container text-[13px]">
+    <div class="flex justify-between items-center w-full">
+      <div>
+        <span id="lastKaiGameID" class="font-[600] mr-1">2025000</span>
+        期开奖结果
+      </div>
+      <div class="text-red-400">余额: 9342.00元</div>
+    </div>
+    <Balls ballLength={6} />
+    <div class="border-y border-gray-200 py-2 mt-2 leading-none">
+      <span id="newKaiGameID" class="font-[600] mr-1">2025000</span>
+      投注截止时间
+      <Countdown id="countDown" endText="开奖中..." />
+    </div>
+  </div>
+</div>

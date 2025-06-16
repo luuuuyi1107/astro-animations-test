@@ -9,7 +9,7 @@ const { ballLength = 6 } = Astro.props as Props;
 ---
 
 <div class="lottery-balls-container">  
-  <div class="flex items-center space-x-1">
+  <div class="flex items-center space-x-2">
     {
       Array.from({ length: ballLength }, () => (
         <div class="ball">
@@ -29,15 +29,12 @@ const { ballLength = 6 } = Astro.props as Props;
 </div>
 
 <script define:vars={{ballLength, ZodiacnimalMap}}>
-
+  const ANIMATION_DURATION = 500; // 动画间隔时间 (毫秒)
   function init () {
     const balls = Array.from(document.querySelectorAll('.ball'));
-    
-     // 监听 API 资料更新事件
-    document.addEventListener('api-data-updated', function(data) {
+    document.addEventListener('getpush-lottery-updated', function(data) {
       stopAnimation()
       if (data.detail.data.OpenLottery.LastKai.KaiText) {
-        
         const ballNums = data.detail.data.OpenLottery.LastKai.KaiText.split(",")
         balls.forEach((ball, index) => {
           updateBall(ball, ballNums[index]);
@@ -69,7 +66,7 @@ const { ballLength = 6 } = Astro.props as Props;
       ballElement.setAttribute("class", `ball ${color}`);
       // ballElement.textContent = _num;
       ballElement.getElementsByClassName('num')[0].textContent = _num;
-      ballElement.getElementsByClassName('text')[0].textContent = ZodiacnimalMap[_num % 12] || "22";
+      ballElement.getElementsByClassName('text')[0].textContent = ZodiacnimalMap[_num % 12] || "";
     }
     
     // 更新所有球
@@ -82,7 +79,7 @@ const { ballLength = 6 } = Astro.props as Props;
       if (isAnimating) return;
       isAnimating = true;
       updateAllBalls();
-      animationInterval = setInterval(updateAllBalls, 500);
+      animationInterval = setInterval(updateAllBalls, ANIMATION_DURATION);
     }
     
     // 停止动画
@@ -98,7 +95,7 @@ const { ballLength = 6 } = Astro.props as Props;
         clearInterval(animationInterval);
       } else if (!document.hidden && isAnimating) {
         updateAllBalls()
-        animationInterval = setInterval(updateAllBalls, 500);
+        animationInterval = setInterval(updateAllBalls, ANIMATION_DURATION);
       }
     });
   }

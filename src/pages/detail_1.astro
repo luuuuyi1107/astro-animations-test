@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro"
-import LotteryInfo from "../components/LotteryInfo.astro"
+import LotteryInfo from "@/components/LotteryDataInfo/index.astro";
 import config from "../libs/game/lhc";
 import Header from "@/components/Header.astro";
 ---
@@ -24,7 +24,7 @@ import Header from "@/components/Header.astro";
                     ? <a href="/detail_2" class="flex flex-col items-center bg-[#f1f1f1] rounded-sm p-2 text-sm leading-relaxed">
                         { game.name }
                       </a>
-                    : <div class="flex flex-col items-center bg-[#f1f1f1] rounded-sm p-2 text-sm leading-relaxed cursor-default select-none">
+                    : <div class="flex flex-col items-center bg-[#f9f9f9] text-gray-300 rounded-sm p-2 text-sm leading-relaxed cursor-default select-none">
                         { game.name }
                       </div>
                     ))

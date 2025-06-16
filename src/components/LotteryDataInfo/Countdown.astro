@@ -1,0 +1,195 @@
+---
+export interface Props {
+  id?: string;
+  class?: string;
+  endTimeCallback?: () => void;
+  initialText?: string;
+  endText?: string;
+}
+
+const { 
+  id = "countDown",
+  class: customClass = "text-red-600",
+  initialText = "00:00:00",
+  endText = "开奖中...",
+} = Astro.props;
+---
+
+<span class={customClass} id={id} data-initial-text={initialText} data-end-text={endText}>
+  {initialText}
+</span>
+
+<script>
+  class CountdownManager {
+    private element: HTMLElement;
+    private timerId: number | null = null;
+    private remainingSeconds: number = 0;
+    private endCallback?: () => void;
+    private initialText: string;
+    private endText: string;
+
+    constructor(element: HTMLElement) {
+      this.element = element;
+      this.initialText = element.dataset.initialText || "00:00:00";
+      this.endText = element.dataset.endText || "开奖中...";
+      
+      // 如果元素有 endCallback 数据属性，尝试从全局作用域获取回调函数
+      const callbackName = element.dataset.endCallback;
+      if (callbackName && typeof (window as any)[callbackName] === 'function') {
+        this.endCallback = (window as any)[callbackName];
+      }
+    }
+
+    // 格式化倒数时间为 HH:MM:SS
+    private formatCountdown(totalSeconds: number): string {
+      if (totalSeconds <= 0) return "00:00:00";
+      
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
+      
+      return [
+        hours.toString().padStart(2, '0'),
+        minutes.toString().padStart(2, '0'),
+        seconds.toString().padStart(2, '0')
+      ].join(':');
+    }
+
+    // 倒计时tick函数
+    private tick = () => {
+      this.remainingSeconds--;
+      
+      // 更新显示
+      this.element.textContent = this.formatCountdown(Math.max(0, this.remainingSeconds));
+      
+      // 检查是否结束
+      if (this.remainingSeconds <= 0) {
+        this.stop();
+        this.element.textContent = this.endText;
+        
+        // 触发结束回调
+        if (this.endCallback) {
+          this.endCallback();
+        }
+        
+        // 触发自定义事件
+        const endEvent = new CustomEvent('countdown-end', {
+          detail: { countdownId: this.element.id },
+          bubbles: true
+        });
+        this.element.dispatchEvent(endEvent);
+      }
+    };
+
+    // 开始倒计时
+    start(seconds: number, callback?: () => void) {
+      // 停止现有计时器
+      this.stop();
+      
+      // 设置新的回调
+      if (callback) {
+        this.endCallback = callback;
+      }
+      
+      // 设置剩余秒数
+      this.remainingSeconds = Math.max(0, seconds);
+      
+      // 立即更新显示
+      this.element.textContent = this.formatCountdown(this.remainingSeconds);
+      
+      // 开始计时器
+      if (this.remainingSeconds > 0) {
+        this.timerId = window.setInterval(this.tick, 1000);
+      } else {
+        // 如果已经结束，直接显示结束文本并触发回调
+        this.element.textContent = this.endText;
+        if (this.endCallback) {
+          this.endCallback();
+        }
+      }
+    }
+
+    // 停止倒计时
+    stop() {
+      if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+      }
+    }
+
+    // 重置倒计时
+    reset() {
+      this.stop();
+      this.element.textContent = this.initialText;
+      this.remainingSeconds = 0;
+    }
+
+    // 获取剩余秒数
+    getRemainingSeconds(): number {
+      return this.remainingSeconds;
+    }
+
+    // 检查是否正在运行
+    isRunning(): boolean {
+      return this.timerId !== null;
+    }
+  }
+
+  // 全局倒计时管理器存储
+  const countdownManagers = new Map<string, CountdownManager>();
+
+  // 初始化倒计时组件
+  function initCountdown() {
+    const countdownElements = document.querySelectorAll('[id*="countDown"], [data-countdown="true"]');
+    
+    countdownElements.forEach((element) => {
+      if (element instanceof HTMLElement && element.id) {
+        const manager = new CountdownManager(element);
+        countdownManagers.set(element.id, manager);
+      }
+    });
+  }
+
+  // 提供全局访问方法
+  (window as any).startCountdown = function(elementId: string, seconds: number, callback?: () => void) {
+    const manager = countdownManagers.get(elementId);
+    if (manager) {
+      manager.start(seconds, callback);
+      return true;
+    }
+    console.warn(`Countdown element with id "${elementId}" not found`);
+    return false;
+  };
+
+  (window as any).stopCountdown = function(elementId: string) {
+    const manager = countdownManagers.get(elementId);
+    if (manager) {
+      manager.stop();
+      return true;
+    }
+    return false;
+  };
+
+  (window as any).resetCountdown = function(elementId: string) {
+    const manager = countdownManagers.get(elementId);
+    if (manager) {
+      manager.reset();
+      return true;
+    }
+    return false;
+  };
+
+  (window as any).getCountdownRemaining = function(elementId: string): number {
+    const manager = countdownManagers.get(elementId);
+    return manager ? manager.getRemainingSeconds() : 0;
+  };
+
+  // 页面加载时初始化
+  document.addEventListener('astro:page-load', initCountdown);
+  
+  // 页面卸载时清理
+  window.addEventListener('beforeunload', () => {
+    countdownManagers.forEach(manager => manager.stop());
+    countdownManagers.clear();
+  });
+</script>
