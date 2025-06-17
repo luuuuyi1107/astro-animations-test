@@ -102,7 +102,7 @@ const { class: customClass = "" } = Astro.props as Props;
       await store.fetchLotteryDataById(21)
     }
 
-    if (store.lottery.OpenLottery) { // 如果已经有数据，直接更新显示
+    if (store.lottery?.OpenLottery) { // 如果已经有数据，直接更新显示
       updateDataDisplay(store.lottery);
     }
     

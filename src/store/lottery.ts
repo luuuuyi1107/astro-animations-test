@@ -3,6 +3,22 @@ import { defineStore } from 'pinia'
 import { parseJsonDate } from '@/libs/Common';
 import { useApi } from "@/libs/Api";
 
+// 安全地获取 sessionStorage 数据
+const getSessionStorageData = (key: string) => {
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    const data = window.sessionStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  }
+  return null;
+}
+
+// 安全地设置 sessionStorage 数据
+const setSessionStorageData = (key: string, value: any) => {
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  }
+}
+
 export const useLotteryStore = defineStore('lottery', {
   state: () => ({
     betAmount: '',
@@ -20,16 +36,21 @@ export const useLotteryStore = defineStore('lottery', {
         amount: 5000,
       },
     ],
-    lottery: sessionStorage.getItem("lottery") ? JSON.parse(sessionStorage.getItem("lottery") || "") : null, // 这里可以根据实际类型定义
+    betTab: 'quick',
+    lottery: getSessionStorageData("lottery"),
   }),
   actions: {
     setBetAmount(amount: string) {
       this.betAmount = amount;
     },
+    setBetTab(tab: string) {
+      this.betTab = tab;
+      console.log(this.betTab);
+    },
     async fetchLotteryDataById(lotteryid: number = 21) {
       const res = await useApi("base").getPush({ lotteryid })
       if (!res.Data) return
-      sessionStorage.setItem("lottery", JSON.stringify(res.Data));
+      setSessionStorageData("lottery", res.Data);
       this.lottery = res.Data;
     },
   },

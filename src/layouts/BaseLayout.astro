@@ -2,7 +2,6 @@
 // 引入 Tailwind CSS（正确方式）
 import "../styles/tailwind.css"
 import { ClientRouter } from "astro:transitions"
-
 ---
 
 <html lang="en" class="w-[100vw] max-w-[640px] mx-auto">
@@ -21,18 +20,6 @@ import { ClientRouter } from "astro:transitions"
     </div>
   </body>
 </html>
-
-<script>
-
-import { createPinia } from 'pinia'
-import { createApp } from 'vue'
-
-
-const pinia = createPinia()
-const app = createApp({})
-app.use(pinia)
-
-</script>
 
 <style is:global>
   html,
