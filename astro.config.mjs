@@ -1,7 +1,8 @@
 import tailwind from "@astrojs/tailwind"
+import vue from "@astrojs/vue"
 
 export default {
-  integrations: [tailwind()],
+  integrations: [tailwind(), vue()],
   vite: {
     resolve: {
       alias: {
@@ -13,3 +14,4 @@ export default {
     }
   }
 }
+1

@@ -2,7 +2,7 @@
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import Header from "@/components/Header.astro"
 import LotteryInfo from "@/components/LotteryDataInfo/index.astro";
-import BetFooter from "@/components/BetFooter.astro";
+import BetFooter from "@/components/BetFooter.vue";
 ---
 
 <BaseLayout>
@@ -16,6 +16,6 @@ import BetFooter from "@/components/BetFooter.astro";
     </div>
     <div class="h-4" />
     
-    <BetFooter />
+    <BetFooter client:only="vue" />
   </div>
 </BaseLayout>
