@@ -10,9 +10,13 @@ const { class: customClass = "" } = Astro.props as Props;
 ---
 
 <script>
-  import store from "@/store/lottery";
+  import { useLotteryStore } from '@/store/lottery'
+  
 
+  
+  
   function initLotterData() {
+    const store = useLotteryStore();
     const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
     if (!apiComponent) return;
     const dataContainer = apiComponent.querySelector('.data-container') as HTMLElement;
@@ -20,9 +24,10 @@ const { class: customClass = "" } = Astro.props as Props;
     let refreshCount = 0;
     const maxRefreshes = 10; // 最多刷新 10 次
 
-    const unsubscribeLottery = store.subscribe((data) => {
-      console.log('getPush data:', data.lottery);
-      updateDataDisplay(data.lottery);
+    store.$subscribe((_, state) => {
+      if (state.lottery?.OpenLottery?.LastKai) {
+        updateDataDisplay(state.lottery);
+      }
     });
 
     // 更新资料显示
@@ -38,7 +43,7 @@ const { class: customClass = "" } = Astro.props as Props;
         newKaiGameIDSpan.textContent = data?.OpenLottery?.NewKai?.GameID || '无资料';
       }
 
-      if (store.getter.timeUntilEnd === 0 || store.getter.timeUntilEnd === null || store.getter.timeUntilEnd <= 0) {
+      if (store.timeUntilEnd === null || store.timeUntilEnd === 0 || store.timeUntilEnd <= 0) {
         if (!refreshInterval) {
           handleAutoRefreshProgressive();
         }
@@ -58,18 +63,24 @@ const { class: customClass = "" } = Astro.props as Props;
       refreshCount = 0; // 重置计数器
       console.log('开始自动刷新');
       
-      refreshInterval = setInterval(() => {
+      refreshInterval = setInterval(async () => {
         refreshCount++;
         console.log(`自动刷新 ${refreshCount}/${maxRefreshes}`);
         // 在每次刷新前检查 timeLeft
-        if (store.getter.timeUntilEnd > 0) {
-          console.log('倒计时已恢复，停止自动刷新');
+        console.log({ store })
+        if (store.timeUntilEnd && store.timeUntilEnd > 0) {
           stopAutoRefresh();
           return;
         }
         
         // 执行刷新
         fetchData();
+
+        // if (store.lottery) {
+        //   updateDataDisplay(store.lottery);
+        // } else {
+        //   console.warn('没有获取到最新的开奖数据');
+        // }
         
         // 达到最大次数后停止
         if (refreshCount >= maxRefreshes) {
@@ -91,14 +102,14 @@ const { class: customClass = "" } = Astro.props as Props;
 
     // 初始化 - 获取第一次数据
     async function fetchData() {
-      store.dispatch('fetchLotteryGetPush', { id: 21 });
+      await store.fetchLotteryDataById(21)
     }
 
     // 清理函数
     function cleanup() {
-      unsubscribeLottery();
+      // unsubscribeLottery();
     }
-
+    // updateDataDisplay(store.lottery);
     
     // 开始初始化
     fetchData();

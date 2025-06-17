@@ -28,21 +28,22 @@ const { ballLength = 6 } = Astro.props as Props;
 </div>
 
 <script >
-  import store from "@/store/lottery";
+  import { useLotteryStore } from '@/store/lottery'
   import { ZodiacnimalMap } from "@/libs/constants";
   const ANIMATION_DURATION = 500; // 动画间隔时间 (毫秒)
   function init () {
+    const store = useLotteryStore();
     const balls: Element[] = Array.from(document.querySelectorAll('.ball'));
 
-    const unsubscribeLottery = store.subscribe((data) => {
-      if (data.lottery?.OpenLottery?.LastKai?.KaiText) {
-        stopAnimation()
-        const ballNums = data.lottery.OpenLottery.LastKai.KaiText.split(",");
+    store.$subscribe((_, state) => {
+      if (state.lottery?.OpenLottery?.LastKai?.KaiText) {
+        stopAnimation();
+        const ballNums = state.lottery.OpenLottery.LastKai.KaiText.split(",");
         balls.forEach((ball, index) => {
           updateBall(ball, ballNums[index]);
         });
       } else {
-        startAnimation()
+        startAnimation();
       }
     });
 
@@ -99,8 +100,10 @@ const { ballLength = 6 } = Astro.props as Props;
       isAnimating = false;
     }
 
-    if (store.getState().lottery.OpenLottery?.LastKai?.KaiText) {
-      const ballNums = store.getState().lottery.OpenLottery?.LastKai?.KaiText.split(",")
+
+
+    if (store.lottery.OpenLottery?.LastKai?.KaiText) {
+      const ballNums = store.lottery.OpenLottery?.LastKai?.KaiText.split(",")
       balls.forEach((ball, index) => {
         updateBall(ball, ballNums[index]);
       });
@@ -117,8 +120,6 @@ const { ballLength = 6 } = Astro.props as Props;
         animationInterval = setInterval(updateAllBalls, ANIMATION_DURATION);
       }
     });
-
-    window.addEventListener('beforeunload', unsubscribeLottery);
   }
 
   // document.addEventListener('DOMContentLoaded', init);

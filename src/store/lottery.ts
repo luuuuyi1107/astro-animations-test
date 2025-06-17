@@ -1,29 +1,36 @@
+// stores/lottery.ts
+import { defineStore } from 'pinia'
 import { parseJsonDate } from '@/libs/Common';
-import { Store } from './store';
 import { useApi } from "@/libs/Api";
 
-// 定义初始状态
-const initialState: iStateGetPush = {
-  lottery: sessionStorage.getItem("lottery") ? JSON.parse(sessionStorage.getItem("lottery") || "") : null
-};
-
-// 创建 store 实例
-const store = new Store({
-  state: initialState,
-  mutations: {
-    SET_LOTTERY(state, payload: { lottery: iGetPush }): void {
-      state.lottery = payload.lottery;
-    },
-    CLEAR_LOTTERY(state): void {
-      state.lottery = null;
-    }
-  },
+export const useLotteryStore = defineStore('lottery', {
+  state: () => ({
+    betAmount: '',
+    betAmountList: [
+      {
+        amount: 10,
+      },
+      {
+        amount: 100,
+      },
+      {
+        amount: 1000,
+      },
+      {
+        amount: 5000,
+      },
+    ],
+    lottery: sessionStorage.getItem("lottery") ? JSON.parse(sessionStorage.getItem("lottery") || "") : null, // 这里可以根据实际类型定义
+  }),
   actions: {
-    async fetchLotteryGetPush(context, data: { id: number }) {
-      const res = await useApi("base").getPush({ lotteryid: data.id })
+    setBetAmount(amount: string) {
+      this.betAmount = amount;
+    },
+    async fetchLotteryDataById(lotteryid: number = 21) {
+      const res = await useApi("base").getPush({ lotteryid })
       if (!res.Data) return
       sessionStorage.setItem("lottery", JSON.stringify(res.Data));
-      context.commit('SET_LOTTERY', { lottery: res.Data });
+      this.lottery = res.Data;
     },
   },
   getters: {
@@ -36,6 +43,6 @@ const store = new Store({
       return endTime - serverTime; // 返回剩余时间，单位为毫秒
     },
   }
-});
+})
 
-export default store; 
+
