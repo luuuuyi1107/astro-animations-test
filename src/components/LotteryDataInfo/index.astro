@@ -4,15 +4,27 @@ import Countdown from "./Countdown.astro";
 
 type Props = {
   class?: string;
+  id?: number; // 21 for 21点
 };
 
-const { class: customClass = "" } = Astro.props as Props;
+const { class: customClass = "", id = 21 } = Astro.props as Props;
 ---
+<script define:vars={{id}}>
+  window.lotteryid = id;
+</script>
 
 <script>
   import { useLotteryStore } from '@/store/lottery'
-
+  
+  // TypeScript interface augmentation for window
+  declare global {
+    interface Window {
+      lotteryid: number;
+    }
+  }
+  // console.log(id)
   function initLotterData() {
+
     const store = useLotteryStore();
     const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
     if (!apiComponent) return;
@@ -22,27 +34,28 @@ const { class: customClass = "" } = Astro.props as Props;
     const maxRefreshes = 10; // 最多刷新 10 次
 
     store.$subscribe((_, state) => {
-      if (state.lottery?.OpenLottery?.LastKai) {
-        updateDataDisplay(state.lottery);
+      if (state.OpenLottery?.LastKai) {
+        updateDataDisplay();
       }
     });
 
     // 更新资料显示
-    function updateDataDisplay(data: iGetPush) {
+    function updateDataDisplay() {
       dataContainer.style.display = 'block';
       // 更新 UI 元素
       const LastKaiGameIDSpan = document.getElementById('lastKaiGameID');
       if (LastKaiGameIDSpan) {
-        LastKaiGameIDSpan.textContent = data?.OpenLottery?.LastKai?.GameID || '无资料';
+        
+        LastKaiGameIDSpan.textContent = store.OpenLottery?.LastKai?.GameID || '无资料';
       }
       const newKaiGameIDSpan = document.getElementById('newKaiGameID');
       if (newKaiGameIDSpan) {
-        newKaiGameIDSpan.textContent = data?.OpenLottery?.NewKai?.GameID || '无资料';
+        newKaiGameIDSpan.textContent = store.OpenLottery?.NewKai?.GameID || '无资料';
       }
 
       const userMoneySpan = document.getElementById('userMoney');
       if (userMoneySpan) {
-        userMoneySpan.textContent = data?.UserData?.Money ? data?.UserData?.Money.toFixed(2) : '0.00';
+        userMoneySpan.textContent = store?.UserData?.Money ? store?.UserData?.Money.toFixed(2) : '0.00';
       }
 
       if (store.timeUntilEnd === null || store.timeUntilEnd === 0 || store.timeUntilEnd <= 0) {
@@ -67,21 +80,18 @@ const { class: customClass = "" } = Astro.props as Props;
         refreshCount++;
         console.log(`自动刷新 ${refreshCount}/${maxRefreshes}`);
         // 在每次刷新前检查 timeLeft
-        console.log({ store })
         if (store.timeUntilEnd && store.timeUntilEnd > 0) {
           stopAutoRefresh();
           return;
         }
-        
         // 执行刷新
         fetchData();
 
-        if (store.lottery) {
-          updateDataDisplay(store.lottery);
+        if (store.OpenLottery) {
+          updateDataDisplay();
         } else {
           console.warn('没有获取到最新的开奖数据');
         }
-        
         // 达到最大次数后停止
         if (refreshCount >= maxRefreshes) {
           console.log('达到最大刷新次数，停止自动刷新');
@@ -102,13 +112,16 @@ const { class: customClass = "" } = Astro.props as Props;
 
     // 初始化 - 获取第一次数据
     async function fetchData() {
-      await store.fetchLotteryDataById(21)
+      await store.fetchLotteryDataById(window.lotteryid)
     }
 
-    if (store.lottery?.OpenLottery) { // 如果已经有数据，直接更新显示
-      updateDataDisplay(store.lottery);
+    if (sessionStorage.getItem(`lottery-${window.lotteryid}`)) { // 如果已经有数据，直接更新显示
+      const cachedData = JSON.parse(sessionStorage.getItem(`lottery-${window.lotteryid}`) || '{}');
+      if (cachedData?.timestamp - Date.now() < 60 * 60 * 1000) {
+        store.setGetPush(cachedData);
+        updateDataDisplay();
+      }
     }
-    
     fetchData();
   }
   document.addEventListener('astro:page-load', initLotterData);

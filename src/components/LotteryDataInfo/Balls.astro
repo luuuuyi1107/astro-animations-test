@@ -35,9 +35,9 @@ const { ballLength = 6 } = Astro.props as Props;
     const balls: Element[] = Array.from(document.querySelectorAll('.ball'));
 
     store.$subscribe((_, state) => {
-      if (state.lottery?.OpenLottery?.LastKai?.KaiText) {
+      if (state.OpenLottery?.LastKai?.KaiText) {
         stopAnimation();
-        const ballNums = state.lottery.OpenLottery.LastKai.KaiText.split(",");
+        const ballNums = state.OpenLottery.LastKai.KaiText.split(",");
         balls.forEach((ball, index) => {
           updateBall(ball, ballNums[index]);
         });
@@ -99,8 +99,8 @@ const { ballLength = 6 } = Astro.props as Props;
       isAnimating = false;
     }
 
-    if (store.lottery?.OpenLottery?.LastKai?.KaiText) {
-      const ballNums = store.lottery.OpenLottery?.LastKai?.KaiText.split(",")
+    if (store?.OpenLottery?.LastKai?.KaiText) {
+      const ballNums = store.OpenLottery?.LastKai?.KaiText.split(",")
       balls.forEach((ball, index) => {
         updateBall(ball, ballNums[index]);
       });

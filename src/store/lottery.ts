@@ -20,29 +20,36 @@ export const useLotteryStore = defineStore('lottery', {
         amount: 5000,
       },
     ],
-    lottery: sessionStorage.getItem("lottery") ? JSON.parse(sessionStorage.getItem("lottery") || "") : null, // 这里可以根据实际类型定义
-  }),
+    ServerTime: "",
+    OpenLottery: null,
+    UserData: null
+  } as iStoreState),
   actions: {
+    setGetPush(data: iGetPush) {
+      this.ServerTime = data.ServerTime || "";
+      this.OpenLottery = data.OpenLottery || null;
+      this.UserData = data.UserData || null;
+    },
     setBetAmount(amount: string) {
       this.betAmount = amount;
     },
     async fetchLotteryDataById(lotteryid: number = 21) {
       const res = await useApi("base").getPush({ lotteryid })
       if (!res.Data) return
-      sessionStorage.setItem("lottery", JSON.stringify(res.Data));
-      this.lottery = res.Data;
+      sessionStorage.setItem(`lottery-${lotteryid}`, JSON.stringify({ ...res.Data, timestamp: Date.now() }));
+      this.OpenLottery = res.Data.OpenLottery || null;
+      this.ServerTime = res.Data.ServerTime || "";
+      this.UserData = res.Data.UserData || null;
     },
   },
   getters: {
     timeUntilEnd: (state) => {
-      if (!state.lottery || !state.lottery.OpenLottery?.NewKai || !state.lottery.OpenLottery.NewKai.EndTime) {
+      if (!state.OpenLottery?.NewKai || !state.OpenLottery.NewKai.EndTime || !state.ServerTime) {
         return null;
       }
-      const serverTime = parseJsonDate(state.lottery.ServerTime).getTime();
-      const endTime = parseJsonDate(state.lottery.OpenLottery.NewKai.EndTime).getTime();
+      const serverTime = parseJsonDate(state.ServerTime as string).getTime();
+      const endTime = parseJsonDate(state.OpenLottery.NewKai.EndTime).getTime();
       return endTime - serverTime; // 返回剩余时间，单位为毫秒
     },
   }
 })
-
-
