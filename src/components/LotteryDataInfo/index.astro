@@ -11,10 +11,7 @@ const { class: customClass = "" } = Astro.props as Props;
 
 <script>
   import { useLotteryStore } from '@/store/lottery'
-  
 
-  
-  
   function initLotterData() {
     const store = useLotteryStore();
     const apiComponent = document.querySelector('[data-component="api-data"]') as HTMLElement;
@@ -76,11 +73,11 @@ const { class: customClass = "" } = Astro.props as Props;
         // 执行刷新
         fetchData();
 
-        // if (store.lottery) {
-        //   updateDataDisplay(store.lottery);
-        // } else {
-        //   console.warn('没有获取到最新的开奖数据');
-        // }
+        if (store.lottery) {
+          updateDataDisplay(store.lottery);
+        } else {
+          console.warn('没有获取到最新的开奖数据');
+        }
         
         // 达到最大次数后停止
         if (refreshCount >= maxRefreshes) {
@@ -105,20 +102,11 @@ const { class: customClass = "" } = Astro.props as Props;
       await store.fetchLotteryDataById(21)
     }
 
-    // 清理函数
-    function cleanup() {
-      // unsubscribeLottery();
+    if (store.lottery.OpenLottery) { // 如果已经有数据，直接更新显示
+      updateDataDisplay(store.lottery);
     }
-    // updateDataDisplay(store.lottery);
     
-    // 开始初始化
     fetchData();
-
-    // 页面卸载时清理
-    window.addEventListener('beforeunload', cleanup);
-    
-    // 提供手动刷新功能
-    (window as any).refreshLotteryData = fetchData;
   }
   document.addEventListener('astro:page-load', initLotterData);
 </script>

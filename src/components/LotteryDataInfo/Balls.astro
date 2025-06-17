@@ -3,7 +3,6 @@
 type Props = {
   ballLength?: number;
 };
-
 const { ballLength = 6 } = Astro.props as Props;
 ---
 
@@ -12,7 +11,7 @@ const { ballLength = 6 } = Astro.props as Props;
     {
       Array.from({ length: ballLength }, () => (
         <div class="ball">
-          <div class="num" />
+          <div class="num">0</div>
           <div class="text" />
         </div>
       ))
@@ -20,7 +19,7 @@ const { ballLength = 6 } = Astro.props as Props;
     <div class="ball-separator">+</div>
     
     <div class="ball">
-      <div class="num" />
+      <div class="num">0</div>
       <div class="text" />
     </div>
   </div>
@@ -99,8 +98,6 @@ const { ballLength = 6 } = Astro.props as Props;
       animationInterval && clearInterval(animationInterval);
       isAnimating = false;
     }
-
-
 
     if (store.lottery.OpenLottery?.LastKai?.KaiText) {
       const ballNums = store.lottery.OpenLottery?.LastKai?.KaiText.split(",")
