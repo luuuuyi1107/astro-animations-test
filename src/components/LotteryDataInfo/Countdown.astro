@@ -20,6 +20,7 @@ const {
 </span>
 
 <script>
+  import store from "@/store/lottery";
   class CountdownManager {
     private element: HTMLElement;
     private timerId: number | null = null;
@@ -32,7 +33,6 @@ const {
       this.element = element;
       this.initialText = element.dataset.initialText || "00:00:00";
       this.endText = element.dataset.endText || "开奖中...";
-      
       // 如果元素有 endCallback 数据属性，尝试从全局作用域获取回调函数
       const callbackName = element.dataset.endCallback;
       if (callbackName && typeof (window as any)[callbackName] === 'function') {
@@ -82,7 +82,7 @@ const {
     };
 
     // 开始倒计时
-    start(seconds: number, callback?: () => void) {
+    start(callback?: () => void) {
       // 停止现有计时器
       this.stop();
       
@@ -92,7 +92,7 @@ const {
       }
       
       // 设置剩余秒数
-      this.remainingSeconds = Math.max(0, seconds);
+      this.remainingSeconds = Math.max(0, store.getter.timeUntilEnd / 1000);
       
       // 立即更新显示
       this.element.textContent = this.formatCountdown(this.remainingSeconds);
@@ -146,44 +146,11 @@ const {
       if (element instanceof HTMLElement && element.id) {
         const manager = new CountdownManager(element);
         countdownManagers.set(element.id, manager);
+        manager.start();
       }
     });
+   
   }
-
-  // 提供全局访问方法
-  (window as any).startCountdown = function(elementId: string, seconds: number, callback?: () => void) {
-    const manager = countdownManagers.get(elementId);
-    if (manager) {
-      manager.start(seconds, callback);
-      return true;
-    }
-    console.warn(`Countdown element with id "${elementId}" not found`);
-    return false;
-  };
-
-  (window as any).stopCountdown = function(elementId: string) {
-    const manager = countdownManagers.get(elementId);
-    if (manager) {
-      manager.stop();
-      return true;
-    }
-    return false;
-  };
-
-  (window as any).resetCountdown = function(elementId: string) {
-    const manager = countdownManagers.get(elementId);
-    if (manager) {
-      manager.reset();
-      return true;
-    }
-    return false;
-  };
-
-  (window as any).getCountdownRemaining = function(elementId: string): number {
-    const manager = countdownManagers.get(elementId);
-    return manager ? manager.getRemainingSeconds() : 0;
-  };
-
   // 页面加载时初始化
   document.addEventListener('astro:page-load', initCountdown);
   

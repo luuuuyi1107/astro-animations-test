@@ -5,13 +5,31 @@ export class Store {
   private mutations: { [key: string]: (state: State, payload?: any) => void };
   private actions: { [key: string]: (context: StoreContext, payload?: any) => void };
   private subscribers: ((state: State) => void)[] = [];
+  private getters: { [key: string]: (state: State) => any };
+  private getterProxy: any;
+  
 
   constructor(options: StoreOptions) {
-    // 嘗試從 localStorage 恢復狀態
+    // 尝试从 localStorage 恢复状态
     const savedState = typeof window !== 'undefined' ? localStorage.getItem('store-state') : null;
     this.state = savedState ? JSON.parse(savedState) : options.state;
     this.mutations = options.mutations || {};
     this.actions = options.actions || {};
+    this.getters = options.getters || {};
+    this.setupGetterProxy()
+  }
+
+  private setupGetterProxy(): void {
+    this.getterProxy = new Proxy({}, {
+      get: (_, key: string) => {
+        const getter = this.getters[key];
+        if (!getter) {
+          console.warn(`Getter "${key}" not found`);
+          return undefined;
+        }
+        return getter(this.state);
+      }
+    });
   }
 
   getState(): State {
@@ -27,7 +45,7 @@ export class Store {
     mutation(this.state, payload);
     this.notify();
     
-    // 保存狀態到 localStorage
+    // 保存状态到 localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('store-state', JSON.stringify(this.state));
     }
@@ -57,7 +75,13 @@ export class Store {
     };
   }
 
+  get getter(): any {
+    return this.getterProxy;
+  }
+
   private notify(): void {
     this.subscribers.forEach(callback => callback(this.state));
   }
+
+ 
 } 

@@ -3,7 +3,7 @@ export enum GetPushKeysEnum {
   HXANIMAL = "hxanimal",
 }
 
-export const ZodiacnimalMap = {
+export const ZodiacnimalMap: Record<number, string> = {
   2: "兔",
   4: "牛",
   7: "狗",

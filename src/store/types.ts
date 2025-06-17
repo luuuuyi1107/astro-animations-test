@@ -20,6 +20,9 @@ export type StoreOptions = {
   actions?: {
     [key: string]: (context: StoreContext, payload?: any) => void;
   };
+  getters?: {
+    [key: string]: (state: State) => any;
+  };
 };
 
 export type StoreContext = {

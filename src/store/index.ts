@@ -1,7 +1,7 @@
 import { Store } from './store';
-import { State } from './types';
+import { type State } from './types';
 
-// 定義初始狀態
+// 定义初始状态
 const initialState: State = {
   user: null,
   betAmountList: [
@@ -20,7 +20,7 @@ const initialState: State = {
   ],
 };
 
-// 創建 store 實例
+// 创建 store 实例
 const store = new Store({
   state: initialState,
   mutations: {
@@ -30,7 +30,7 @@ const store = new Store({
   },
   actions: {
     async fetchUser(context: any) {
-      // 模擬 API 調用
+      // 模拟 API 调用
       const user = await new Promise(resolve => {
         setTimeout(() => {
           resolve({ id: 1, name: 'John Doe' });

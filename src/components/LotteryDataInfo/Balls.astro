@@ -1,6 +1,5 @@
 
 ---
-import { ZodiacnimalMap } from "@/libs/constants";
 type Props = {
   ballLength?: number;
 };
@@ -28,14 +27,17 @@ const { ballLength = 6 } = Astro.props as Props;
   
 </div>
 
-<script define:vars={{ballLength, ZodiacnimalMap}}>
+<script >
+  import store from "@/store/lottery";
+  import { ZodiacnimalMap } from "@/libs/constants";
   const ANIMATION_DURATION = 500; // 动画间隔时间 (毫秒)
   function init () {
-    const balls = Array.from(document.querySelectorAll('.ball'));
-    document.addEventListener('getpush-lottery-updated', function(data) {
-      stopAnimation()
-      if (data.detail.data.OpenLottery.LastKai.KaiText) {
-        const ballNums = data.detail.data.OpenLottery.LastKai.KaiText.split(",")
+    const balls: Element[] = Array.from(document.querySelectorAll('.ball'));
+
+    const unsubscribeLottery = store.subscribe((data) => {
+      if (data.lottery?.OpenLottery?.LastKai?.KaiText) {
+        stopAnimation()
+        const ballNums = data.lottery.OpenLottery.LastKai.KaiText.split(",");
         balls.forEach((ball, index) => {
           updateBall(ball, ballNums[index]);
         });
@@ -44,29 +46,37 @@ const { ballLength = 6 } = Astro.props as Props;
       }
     });
 
-    let animationInterval = null;
+    let animationInterval: NodeJS.Timeout | null = null;
     let isAnimating = false;
     // 生成随机数字 (1-49 用于普通球, 1-8 用于特别球)
-    function getRandomNumber(min, max) {
+    function getRandomNumber(min: number, max: number) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function getColorByNumber(num) {
+    function getColorByNumber(num: number) {
       const _num = num % 3
       return _num === 0 ? "red" : _num === 1 ? "green" : "blue"
     }
 
     // 更新单一球的显示
-    function updateBall(ballElement, num) {
+    function updateBall(ballElement: Element, num?: number) {
       const _num = num || getRandomNumber(1, 49).toString().padStart(1, '0')
 
-      const color = getColorByNumber(_num)
+      const color = getColorByNumber(+_num)
       // 添加转换效果
       if (ballElement.textContent === _num + "") return
       ballElement.setAttribute("class", `ball ${color}`);
-      // ballElement.textContent = _num;
-      ballElement.getElementsByClassName('num')[0].textContent = _num;
-      ballElement.getElementsByClassName('text')[0].textContent = ZodiacnimalMap[_num % 12] || "";
+      // 确保 'num' 元素存在
+      const numElement = ballElement.getElementsByClassName('num')[0] as HTMLElement | undefined;
+      if (numElement) {
+        numElement.textContent = _num + "";
+      }
+
+      // 确保 'text' 元素存在
+      const textElement = ballElement.getElementsByClassName('text')[0] as HTMLElement | undefined;
+      if (textElement) {
+        textElement.textContent = ZodiacnimalMap[+_num % 12] || "";
+      }
     }
     
     // 更新所有球
@@ -85,24 +95,33 @@ const { ballLength = 6 } = Astro.props as Props;
     // 停止动画
     function stopAnimation() {
       if (!isAnimating) return;
-      clearInterval(animationInterval);
+      animationInterval && clearInterval(animationInterval);
       isAnimating = false;
     }
-    startAnimation()
+
+    if (store.getState().lottery.OpenLottery?.LastKai?.KaiText) {
+      const ballNums = store.getState().lottery.OpenLottery?.LastKai?.KaiText.split(",")
+      balls.forEach((ball, index) => {
+        updateBall(ball, ballNums[index]);
+      });
+    } else {
+      startAnimation()
+    }
+
     // 当页面不可见时暂停动画 (节省资源)
     document.addEventListener('visibilitychange', function() {
       if (document.hidden && isAnimating) {
-        clearInterval(animationInterval);
+        animationInterval && clearInterval(animationInterval);
       } else if (!document.hidden && isAnimating) {
         updateAllBalls()
         animationInterval = setInterval(updateAllBalls, ANIMATION_DURATION);
       }
     });
+
+    window.addEventListener('beforeunload', unsubscribeLottery);
   }
 
-  
-
-  document.addEventListener('DOMContentLoaded', init);
+  // document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('astro:page-load', init);
 </script>
 

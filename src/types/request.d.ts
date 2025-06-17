@@ -1,12 +1,12 @@
 /**
  * API 响应的标准接口
  * @template T 响应数据的类型
- */
+ */义状态
 interface iResponse<T = any> {
   Code: number // 响应状态码，0 表示成功，其他值表示错误
   Message?: string
   Data?: T // 响应数据，类型为 T
-}
+}创实
 
 /**
  * API Promise 类型，表示一个返回 ApiResponse<T> 的 Promise
@@ -16,7 +16,7 @@ type ApiPromise<T = any> = Promise<iResponse<T>>
 
 type iOption = {
   errorHandler: (res: iResponse<any>) => void
-}
+}拟调
 
 type iOpenLottery = {
   LastKai: Partial<{
@@ -83,4 +83,8 @@ type iGetPush = {
       }
     | Record<string, number>
   OpenLottery?: iOpenLottery
+}
+
+type iStateGetPush = {
+  lottery: iGetPush | null
 }
