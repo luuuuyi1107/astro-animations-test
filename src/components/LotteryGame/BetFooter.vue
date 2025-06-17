@@ -38,23 +38,24 @@
 </template>
 
 <script setup lang="ts">
-import { createPinia } from 'pinia'
-import { createApp } from 'vue'
 import { useLotteryStore } from '@/store/lottery'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
-const pinia = createPinia()
-const app = createApp({})
-app.use(pinia)
-
-const betAmountList = useLotteryStore().betAmountList;
-const betAmount = computed(() => useLotteryStore().betAmount);
+// 創建響應式引用
+const store = ref(useLotteryStore())
+const betAmountList = computed(() => store.value.betAmountList)
+const betAmount = computed(() => store.value.betAmount)
 
 const setBetAmount = (amount: number) => {
-    useLotteryStore().setBetAmount(amount.toString());
+  store.value.setBetAmount(amount.toString())
 }
 
 const clearBetAmount = () => {
-    useLotteryStore().setBetAmount('');
+  store.value.setBetAmount('')
 }
+
+// 在組件掛載後確保 store 已初始化
+onMounted(() => {
+  store.value = useLotteryStore()
+})
 </script>
