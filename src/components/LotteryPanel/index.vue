@@ -60,16 +60,12 @@
     }
 
     isPolling.value = true
-    console.log(`开始轮询，第 ${pollCount.value + 1} 次`)
-
     pollTimer.value = setTimeout(async () => {
       try {
         pollCount.value++
         console.log(`执行第 ${pollCount.value} 次轮询`)
-        
         // 重新获取数据
         await store.value.fetchLotteryDataById(+props.id)
-        
         // 检查是否需要继续轮询
         if ((store.value.timeUntilEnd ?? 0) <= 0 && pollCount.value < maxPollCount.value) {
           isPolling.value = false

@@ -21,3 +21,14 @@ export const setSessionStorageData = (key: string, value: any) => {
     window.sessionStorage.setItem(key, JSON.stringify(value));
   }
 }
+
+// 生成随机数字
+export function getRandomNumber(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+  // 根据数字获取颜色
+export function getColorByNumber(num: number): string {
+  const _num = num % 3
+  return _num === 0 ? "red" : _num === 1 ? "green" : "blue"
+}

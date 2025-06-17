@@ -27,24 +27,23 @@ export const useLotteryStore = defineStore('lottery', {
   } as iStoreState),
   actions: {
     setGetPush(data: iGetPush) {
+      this.UserData = data.UserData || null;
       this.ServerTime = data.ServerTime || "";
       this.OpenLottery = data.OpenLottery || null;
-      this.UserData = data.UserData || null;
     },
     setBetAmount(amount: string) {
       this.betAmount = amount;
     },
     setBetTab(tab: string) {
       this.betTab = tab;
-      console.log(this.betTab);
     },
     async fetchLotteryDataById(lotteryid: number = 21) {
       const res = await useApi("base").getPush({ lotteryid })
       if (!res.Data) return
       setSessionStorageData(`lottery-${lotteryid}`, { ...res.Data, timestamp: Date.now() });
-      this.OpenLottery = res.Data.OpenLottery || null;
       this.ServerTime = res.Data.ServerTime || "";
       this.UserData = res.Data.UserData || null;
+      this.OpenLottery = res.Data.OpenLottery || null;
     },
   },
   getters: {

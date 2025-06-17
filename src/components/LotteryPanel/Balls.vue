@@ -9,67 +9,46 @@
         <div class="num">{{ ball.num }}</div>
         <div class="text">{{ ball.text }}</div>
       </div>
-      
-      <div class="ball-separator">+</div>
-      
-      <div :class="['ball', specialBall.color]">
-        <div class="num">{{ specialBall.num }}</div>
-        <div class="text">{{ specialBall.text }}</div>
-      </div>
+      <template v-if="showSpecialBall && specialBall">
+        <div class="ball-separator">+</div>
+        
+        <div :class="['ball', specialBall.color]">
+          <div class="num">{{ specialBall.num }}</div>
+          <div class="text">{{ specialBall.text }}</div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useLotteryStore } from '@/store/lottery'
-import { setupPinia } from '@/libs/pinia-setup'
+import { useLotteryData } from "./common.ts"
 import { ZodiacnimalMap } from "@/libs/constants"
+import { getRandomNumber, getColorByNumber } from "@/libs/Common"
 
+const { store } = useLotteryData()
 
 // Props 定义
 interface Props {
   ballLength?: number
+  showSpecialBall?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  ballLength: 6
+  ballLength: 6,
+  showSpecialBall: true
 })
-
-// 设置 Pinia
-setupPinia()
-const store = useLotteryStore()
-
 // 常数
 const ANIMATION_DURATION = 500 // 动画间隔时间 (毫秒)
-
-// 球的数据结构
-interface BallData {
-  num: string
-  text: string
-  color: string
-}
-
 // 响应式数据
-const balls = ref<BallData[]>([])
-const specialBall = ref<BallData>({ num: '0', text: '', color: 'red' })
+const balls = ref<iBallData[]>([])
+const specialBall = ref<iBallData>()
 const animationInterval = ref<NodeJS.Timeout | null>(null)
 const isAnimating = ref(false)
 
-// 生成随机数字
-function getRandomNumber(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-// 根据数字获取颜色
-function getColorByNumber(num: number): string {
-  const _num = num % 3
-  return _num === 0 ? "red" : _num === 1 ? "green" : "blue"
-}
-
 // 创建球数据
-function createBallData(num?: string): BallData {
+function createiBallData(num?: string): iBallData {
   const _num = num || getRandomNumber(1, 49).toString()
   const numValue = parseInt(_num)
   
@@ -82,14 +61,14 @@ function createBallData(num?: string): BallData {
 
 // 初始化球阵列
 function initializeBalls(): void {
-  balls.value = Array.from({ length: props.ballLength }, () => createBallData())
-  specialBall.value = createBallData()
+  balls.value = Array.from({ length: props.ballLength }, () => createiBallData());
+  if (props.showSpecialBall) specialBall.value = createiBallData()
 }
 
 // 更新所有球
 function updateAllBalls(): void {
-  balls.value = balls.value.map(() => createBallData())
-  specialBall.value = createBallData()
+  balls.value = balls.value.map(() => createiBallData())
+  if (props.showSpecialBall) specialBall.value = specialBall.value = createiBallData()
 }
 
 // 根据开奖结果更新球
@@ -99,12 +78,12 @@ function updateBallsWithResult(kaiText: string): void {
   // 更新普通球
   balls.value = balls.value.map((_, index) => {
     const num = ballNums[index]
-    return num ? createBallData(num) : createBallData()
+    return num ? createiBallData(num) : createiBallData()
   })
   
-  // 更新特别球（最后一个数字）
+  if (!props.showSpecialBall) return
   const specialNum = ballNums[props.ballLength]
-  specialBall.value = specialNum ? createBallData(specialNum) : createBallData()
+  specialBall.value = specialNum ? createiBallData(specialNum) : createiBallData()
 }
 
 // 开始动画
@@ -156,15 +135,12 @@ watch(
 initializeBalls()
 // 组件挂载
 onMounted(() => {
-  
-  
   // 检查初始状态
   if (store.OpenLottery?.LastKai?.KaiText) {
     updateBallsWithResult(store.OpenLottery.LastKai.KaiText)
   } else {
     startAnimation()
   }
-  
   // 添加页面可见性监听
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
@@ -174,7 +150,6 @@ onUnmounted(() => {
   stopAnimation()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
-
 
 </script>
 

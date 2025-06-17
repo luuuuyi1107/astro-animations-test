@@ -16,7 +16,7 @@ type ApiPromise<T = any> = Promise<iResponse<T>>
 
 type iOption = {
   errorHandler: (res: iResponse<any>) => void
-}拟调
+}
 
 type iOpenLottery = {
   LastKai: Partial<{
@@ -97,3 +97,4 @@ type iStoreState = {
   OpenLottery: iOpenLottery | null
   UserData: iUserData | null
 }
+
