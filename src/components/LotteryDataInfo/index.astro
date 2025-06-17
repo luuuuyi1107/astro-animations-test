@@ -40,6 +40,11 @@ const { class: customClass = "" } = Astro.props as Props;
         newKaiGameIDSpan.textContent = data?.OpenLottery?.NewKai?.GameID || '无资料';
       }
 
+      const userMoneySpan = document.getElementById('userMoney');
+      if (userMoneySpan) {
+        userMoneySpan.textContent = data?.UserData?.Money ? data?.UserData?.Money.toFixed(2) : '0.00';
+      }
+
       if (store.timeUntilEnd === null || store.timeUntilEnd === 0 || store.timeUntilEnd <= 0) {
         if (!refreshInterval) {
           handleAutoRefreshProgressive();
@@ -58,8 +63,6 @@ const { class: customClass = "" } = Astro.props as Props;
       }
       
       refreshCount = 0; // 重置计数器
-      console.log('开始自动刷新');
-      
       refreshInterval = setInterval(async () => {
         refreshCount++;
         console.log(`自动刷新 ${refreshCount}/${maxRefreshes}`);
@@ -102,7 +105,7 @@ const { class: customClass = "" } = Astro.props as Props;
       await store.fetchLotteryDataById(21)
     }
 
-    if (store.lottery.OpenLottery) { // 如果已经有数据，直接更新显示
+    if (store.lottery?.OpenLottery) { // 如果已经有数据，直接更新显示
       updateDataDisplay(store.lottery);
     }
     
@@ -119,7 +122,7 @@ const { class: customClass = "" } = Astro.props as Props;
         <span id="lastKaiGameID" class="font-[600] mr-1">2025000</span>
         期开奖结果
       </div>
-      <div class="text-red-400">余额: 9342.00元</div>
+      <div class="text-red-400">余额: <span id="userMoney">0.00</span>元</div>
     </div>
     <Balls ballLength={6} />
     <div class="border-y border-gray-200 py-2 mt-2 leading-none">

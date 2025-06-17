@@ -99,7 +99,7 @@ const { ballLength = 6 } = Astro.props as Props;
       isAnimating = false;
     }
 
-    if (store.lottery.OpenLottery?.LastKai?.KaiText) {
+    if (store.lottery?.OpenLottery?.LastKai?.KaiText) {
       const ballNums = store.lottery.OpenLottery?.LastKai?.KaiText.split(",")
       balls.forEach((ball, index) => {
         updateBall(ball, ballNums[index]);
