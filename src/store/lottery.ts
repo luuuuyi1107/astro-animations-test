@@ -1,6 +1,6 @@
 // stores/lottery.ts
 import { defineStore } from 'pinia'
-import { parseJsonDate } from '@/libs/Common';
+import { parseJsonDate, setSessionStorageData } from '@/libs/Common';
 import { useApi } from "@/libs/Api";
 
 export const useLotteryStore = defineStore('lottery', {
@@ -20,6 +20,7 @@ export const useLotteryStore = defineStore('lottery', {
         amount: 5000,
       },
     ],
+    betTab: 'quick',
     ServerTime: "",
     OpenLottery: null,
     UserData: null
@@ -33,10 +34,14 @@ export const useLotteryStore = defineStore('lottery', {
     setBetAmount(amount: string) {
       this.betAmount = amount;
     },
+    setBetTab(tab: string) {
+      this.betTab = tab;
+      console.log(this.betTab);
+    },
     async fetchLotteryDataById(lotteryid: number = 21) {
       const res = await useApi("base").getPush({ lotteryid })
       if (!res.Data) return
-      sessionStorage.setItem(`lottery-${lotteryid}`, JSON.stringify({ ...res.Data, timestamp: Date.now() }));
+      setSessionStorageData(`lottery-${lotteryid}`, { ...res.Data, timestamp: Date.now() });
       this.OpenLottery = res.Data.OpenLottery || null;
       this.ServerTime = res.Data.ServerTime || "";
       this.UserData = res.Data.UserData || null;

@@ -15,7 +15,7 @@ const { class: customClass = "", id = 21 } = Astro.props as Props;
 
 <script>
   import { useLotteryStore } from '@/store/lottery'
-  
+  import { getSessionStorageData } from '@/libs/Common';
   // TypeScript interface augmentation for window
   declare global {
     interface Window {
@@ -115,12 +115,11 @@ const { class: customClass = "", id = 21 } = Astro.props as Props;
       await store.fetchLotteryDataById(window.lotteryid)
     }
 
-    if (sessionStorage.getItem(`lottery-${window.lotteryid}`)) { // 如果已经有数据，直接更新显示
-      const cachedData = JSON.parse(sessionStorage.getItem(`lottery-${window.lotteryid}`) || '{}');
-      if (cachedData?.timestamp - Date.now() < 60 * 60 * 1000) {
-        store.setGetPush(cachedData);
-        updateDataDisplay();
-      }
+    const cachedData = getSessionStorageData(`lottery-${window.lotteryid}`);
+
+    if (cachedData && cachedData?.timestamp - Date.now() < 60 * 60 * 1000) { // 如果已经有数据，直接更新显示
+      store.setGetPush(cachedData);
+      updateDataDisplay();
     }
     fetchData();
   }
