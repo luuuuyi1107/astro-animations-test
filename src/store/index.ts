@@ -4,6 +4,20 @@ import { State } from './types';
 // 定義初始狀態
 const initialState: State = {
   user: null,
+  betAmountList: [
+    {
+      amount: 10,
+    },
+    {
+      amount: 100,
+    },
+    {
+      amount: 1000,
+    },
+    {
+      amount: 5000,
+    },
+  ],
 };
 
 // 創建 store 實例
