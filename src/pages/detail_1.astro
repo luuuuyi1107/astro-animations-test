@@ -1,21 +1,11 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro"
-import LotteryInfo from "@/components/LotteryDataInfo/index.astro";
+import LotteryPanel from "@/components/LotteryPanel/index.vue";
 import config from "@/libs/game/lhc";
 import Header from "@/components/Header.astro";
 ---
 
-<script>
 
-import { createPinia } from 'pinia'
-import { createApp } from 'vue'
-
-
-const pinia = createPinia()
-const app = createApp({})
-app.use(pinia)
-
-</script>
 
 <BaseLayout>
   <div class=" bg-white min-h-svh">
@@ -23,7 +13,8 @@ app.use(pinia)
       <Header title="新澳门⑥合彩" />
     </div>
     
-    <LotteryInfo client:load id={21} class="px-4 mt-4" />
+    <!-- <LotteryInfo client:load id={21} class="px-4 mt-4" /> -->
+    <LotteryPanel client:load id="21" class="px-4 mt-4" />
     <div class="mt-2 border-t-[4px] border-b border-gray-200 p-4">
       {
         config.map((games) => (

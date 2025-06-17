@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import Header from "@/components/Header.astro"
-import LotteryInfo from "@/components/LotteryDataInfo/index.astro";
+import LotteryPanel from "@/components/LotteryPanel/index.vue";
 import BetFooter from "@/components/LotteryGame/BetFooter.vue";
 import BetTab from "@/components/LotteryGame/BetTab.vue";
 ---
@@ -11,7 +11,7 @@ import BetTab from "@/components/LotteryGame/BetTab.vue";
     <div slot="header" class="bg-[#f77e04] text-white h-11">
       <Header title="新澳门⑥合彩-特码投注" />
     </div>
-    <LotteryInfo client:load class="px-4 mt-4" />
+    <LotteryPanel client:load id="21" class="px-4 mt-4" />
     <div class="mt-2 border-t-[4px] border-b border-gray-200">
       <BetTab client:load />
     </div>    
