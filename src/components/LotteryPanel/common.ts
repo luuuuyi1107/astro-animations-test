@@ -4,15 +4,19 @@ import { useLotteryStore } from '@/store/lottery'
 import { ref } from 'vue'
 type StateChangeCallback = (state: lotteryStatusEnum) => void
 type LotteryDataChangeCallback = (data: iOpenLottery) => void
-
+let initialPiniaSetup = false
 export const useLotteryData = (cachedData?: iGetPush) => {
   
-  setupPinia()
+
+  if (!initialPiniaSetup) {
+    initialPiniaSetup = true
+    setupPinia()
+  }
+
   const previousLotteryState = ref(lotteryStatusEnum.COUNTING)
   const previousServerTime = ref("")
   const store = useLotteryStore()
   cachedData && store.setGetPush(cachedData)
-
   // 储存回调函数
   const stateChangeCallbacks: StateChangeCallback[] = []
   const lotteryDataChangeCallbacks: LotteryDataChangeCallback[] = []

@@ -20,14 +20,12 @@
 </template>
 
 <script setup lang="ts">
-  import { getSessionStorageData } from "@/libs/Common";
-  // import { useLotteryStore } from "@/store/lottery"
+  import { getSessionStorageData, setSessionStorageData } from "@/libs/Common";
   import { ref, onMounted, onUnmounted } from 'vue'
-  // import { setupPinia } from "@/libs/pinia-setup"
   import Balls  from '@/components/LotteryPanel/Balls.vue'
   import Countdown from '@/components/LotteryPanel/Countdown.vue'
   import { lotteryStatusEnum } from "@/libs/constants";
-import { useLotteryData } from "./common.ts"
+  import { useLotteryData } from "./common.ts"
 
   type Props = {
     id: string
@@ -39,11 +37,10 @@ import { useLotteryData } from "./common.ts"
     class: ''
   })
 
-  // setupPinia()
   const cachedData = getSessionStorageData(`lottery-${props.id}`);
-  const { store } = useLotteryData(cachedData)
+  
 
-  // 轮询相关状态
+  const { store } = useLotteryData(cachedData)
   const pollCount = ref(0)
   const maxPollCount = ref(10)
   const pollInterval = ref(3000) // 3秒
@@ -87,7 +84,7 @@ import { useLotteryData } from "./common.ts"
     isPolling.value = false
     console.log(`轮询结束，总共执行了 ${pollCount.value} 次`)
   }
-  // 组件挂载时初始化
+
   onMounted(async () => {
     try {
       await store.fetchLotteryDataById(+props.id)
@@ -100,9 +97,9 @@ import { useLotteryData } from "./common.ts"
     }
   })
 
-  // 组件卸载时清理
   onUnmounted(() => {
     stopPolling()
+    
   })
 
 </script>

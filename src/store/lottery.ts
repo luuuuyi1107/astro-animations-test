@@ -33,6 +33,9 @@ export const useLotteryStore = defineStore('lottery', {
       this.ServerTime = data.ServerTime || "";
       this.OpenLottery = data.OpenLottery || null;
     },
+    setServerTime(time: string) {
+      this.ServerTime = time;
+    },
     setBetAmount(amount: string) {
       this.betAmount = amount;
     },
@@ -60,5 +63,13 @@ export const useLotteryStore = defineStore('lottery', {
       const endTime = parseJsonDate(state.OpenLottery.NewKai.EndTime).getTime();
       return endTime - serverTime; // 返回剩余时间，单位为毫秒
     },
+    differTime: (state) => {
+      if (!state.ServerTime) {
+        return 0;
+      }
+      const serverTime = parseJsonDate(state.ServerTime as string).getTime();
+      const currentTime = Date.now();
+      return currentTime - serverTime; // 返回本地时间和伺服器时间的差异(毫秒)
+    }
   }
 })
