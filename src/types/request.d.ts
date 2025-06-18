@@ -88,6 +88,3 @@ type iGetPush = {
 type iStateGetPush = {
   lottery: iGetPush | null
 }
-
-
-
