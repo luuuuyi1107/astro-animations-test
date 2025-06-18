@@ -8,9 +8,12 @@ type iBallData = {
 type iStoreState = {
   betAmount: string
   betTab: string
+  totalBets: number
+  clearBet: boolean
   betAmountList: Array<{ amount: number }>
   ServerTime: string
   OpenLottery: iOpenLottery | null
   UserData: iUserData | null
   LotteryState: keyof typeof lotteryStatusEnum | null
+  LotteryRate: iLotteryRate | null
 }
