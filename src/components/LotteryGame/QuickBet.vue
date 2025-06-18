@@ -201,6 +201,12 @@ const handleBet = (bet: any) => {
   bet.active = !bet.active
 }
 
+// Add watch effect for active bets
+watch([betData, filterOptions], () => {
+  const activeBets = betData.value.filter(bet => bet.active).length
+  store.value.setTotalBets(activeBets)
+}, { deep: true })
+
 const cleanBetData = () => {
   betData.value = []
   for (let i = 0; i < totalNumber; i++) {
@@ -233,6 +239,7 @@ watch(clearBet, (newVal) => {
     filterOptions.value = []
   }
 })
+
 
 onMounted(() => {
   cleanBetData()
