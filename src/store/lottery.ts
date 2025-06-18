@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { parseJsonDate, setSessionStorageData } from '@/libs/Common';
 import { useApi } from "@/libs/Api";
+import { lotteryStatusEnum } from '@/libs/constants';
 
 export const useLotteryStore = defineStore('lottery', {
   state: () => ({
@@ -23,7 +24,8 @@ export const useLotteryStore = defineStore('lottery', {
     betTab: 'quick',
     ServerTime: "",
     OpenLottery: null,
-    UserData: null
+    UserData: null,
+    LotteryState: lotteryStatusEnum.COUNTING,
   } as iStoreState),
   actions: {
     setGetPush(data: iGetPush) {
@@ -45,6 +47,9 @@ export const useLotteryStore = defineStore('lottery', {
       this.UserData = res.Data.UserData || null;
       this.OpenLottery = res.Data.OpenLottery || null;
     },
+    setLotteryState(state: lotteryStatusEnum) {
+      this.LotteryState = state;
+    }
   },
   getters: {
     timeUntilEnd: (state) => {

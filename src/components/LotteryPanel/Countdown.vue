@@ -5,8 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useLotteryData } from "./common.ts"
+import { lotteryStatusEnum } from '@/libs/constants.ts'
 
 // Props 定义
 export interface Props {
@@ -14,16 +15,18 @@ export interface Props {
   class?: string
   endTimeCallback?: () => void
   initialText?: string
+  openingText?: string
   endText?: string
 }
 const props = withDefaults(defineProps<Props>(), {
   id: 'countDown',
   class: 'text-red-600',
   initialText: '00:00:00',
-  endText: '开奖中...'
+  openingText: '开奖中...',
+  endText: '封盘中...'
 })
 
-const { store } = useLotteryData()
+const { store, onStateChange, onLotteryDataChange } = useLotteryData()
 const displayText = ref(props.initialText)
 const remainingSeconds = ref(0)
 const timerId = ref<NodeJS.Timeout | null>(null)
@@ -59,13 +62,7 @@ function tick(): void {
   if (remainingSeconds.value <= 0) {
     stop()
     displayText.value = props.endText
-    
-    // 触发结束回调
-    if (props.endTimeCallback) {
-      props.endTimeCallback()
-    }
-    
-    // 触发自定义事件
+    store.setLotteryState(lotteryStatusEnum.END)
     emit('countdown-end', props.id)
   }
 }
@@ -85,11 +82,8 @@ function start(callback?: () => void): void {
     timerId.value = setInterval(tick, 1000)
   } else {
     displayText.value = props.endText
-    if (props.endTimeCallback || callback) {
-      const finalCallback = callback || props.endTimeCallback
-      if (finalCallback) {
-        finalCallback()
-      }
+    if (callback) {
+      callback()
     }
     emit('countdown-end', props.id)
   }
@@ -102,20 +96,31 @@ function stop(): void {
   isRunning.value = false
 }
 
+const unsubscribeState = onStateChange(() => {
+  if (store.LotteryState === lotteryStatusEnum.END) {
+    displayText.value = props.endText
+  } else if (store.LotteryState === lotteryStatusEnum.OPENING) {
+    displayText.value = props.openingText
+  } else if (store.LotteryState === lotteryStatusEnum.COUNTING) {
+    displayText.value = props.initialText
+    start()
+  }
+})
+
+const unsubscribeDataChange = onLotteryDataChange(() => {
+  start()
+})
+
 // 组件挂载时
 onMounted(() => {
   start()
-
-  store.$subscribe(() => {
-    if (isRunning.value) return
-    start()
-  })
-
 })
 
 // 组件卸载时清理
 onUnmounted(() => {
   stop()
+  unsubscribeState()
+  unsubscribeDataChange()
 })
 
 </script>

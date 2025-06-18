@@ -1,3 +1,4 @@
+import { colorMap, colorEnum } from './constants';
 export function parseJsonDate(jsonDate: string | undefined): Date {
   if (!jsonDate) return new Date();
   // 提取毫秒数
@@ -29,6 +30,14 @@ export function getRandomNumber(min: number, max: number): number {
 
   // 根据数字获取颜色
 export function getColorByNumber(num: number): string {
-  const _num = num % 3
-  return _num === 0 ? "red" : _num === 1 ? "green" : "blue"
+  let color = colorEnum.red
+  Object.entries(colorMap).some(([_color, numbers]) => {
+    if (numbers.includes(num)) {
+      color = _color as string; // 确保 color 是 string 类型
+      return true; // 找到匹配的颜色，退出循环
+    }
+    return false; // 继续查找
+  })
+
+  return color
 }

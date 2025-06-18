@@ -8,11 +8,11 @@
         </div>
         <div class="text-red-400">余额: <span v-text="store.UserData?.Money || '0.00'"  />元</div>
       </div>
-      <Balls :ballLength="6" />
+      <Balls :ballLength="6" :showSpecialBall="false" />
       <div class="border-y border-gray-200 py-2 mt-2 leading-none">
         <span id="newKaiGameID" class="font-[600] mr-1" v-text="store.OpenLottery?.NewKai?.GameID || '2025000'" />
         投注截止时间
-        <Countdown id="countDown" endText="开奖中..." />
+        <Countdown id="countDown"  @countdown-end="startPolling"  />
       </div>
       
     </div>
@@ -21,24 +21,27 @@
 
 <script setup lang="ts">
   import { getSessionStorageData } from "@/libs/Common";
-  import { useLotteryStore } from "@/store/lottery"
-  import { ref, watch, onMounted, onUnmounted } from 'vue'
-  import { setupPinia } from "@/libs/pinia-setup"
+  // import { useLotteryStore } from "@/store/lottery"
+  import { ref, onMounted, onUnmounted } from 'vue'
+  // import { setupPinia } from "@/libs/pinia-setup"
   import Balls  from '@/components/LotteryPanel/Balls.vue'
   import Countdown from '@/components/LotteryPanel/Countdown.vue'
+  import { lotteryStatusEnum } from "@/libs/constants";
+import { useLotteryData } from "./common.ts"
 
   type Props = {
     id: string
     class?: string
   }
 
-  setupPinia()
-  // 创建响应式引用
-  const store = ref(useLotteryStore())
   const props = withDefaults(defineProps<Props>(), {
     id: '21',
     class: ''
   })
+
+  // setupPinia()
+  const cachedData = getSessionStorageData(`lottery-${props.id}`);
+  const { store } = useLotteryData(cachedData)
 
   // 轮询相关状态
   const pollCount = ref(0)
@@ -46,12 +49,6 @@
   const pollInterval = ref(3000) // 3秒
   const isPolling = ref(false)
   const pollTimer = ref<NodeJS.Timeout | null>(null)
-
-  // 初始化数据
-  const cachedData = getSessionStorageData(`lottery-${props.id}`);
-  if (cachedData) {
-    store.value.setGetPush(cachedData);
-  }
 
   // 轮询函数
   const startPolling = () => {
@@ -65,14 +62,14 @@
         pollCount.value++
         console.log(`执行第 ${pollCount.value} 次轮询`)
         // 重新获取数据
-        await store.value.fetchLotteryDataById(+props.id)
+        await store.fetchLotteryDataById(+props.id)
         // 检查是否需要继续轮询
-        if ((store.value.timeUntilEnd ?? 0) <= 0 && pollCount.value < maxPollCount.value) {
+        if ((store.timeUntilEnd ?? 0) <= 0 && pollCount.value < maxPollCount.value) {
           isPolling.value = false
           startPolling() // 递归调用下一次轮询
         } else {
-          // 停止轮询
-          stopPolling()
+          store.setLotteryState(lotteryStatusEnum.COUNTING)
+          stopPolling() // 停止轮询
         }
       } catch (error) {
         console.error('轮询过程中发生错误:', error)
@@ -90,33 +87,12 @@
     isPolling.value = false
     console.log(`轮询结束，总共执行了 ${pollCount.value} 次`)
   }
-
-  // 重置轮询状态
-  const resetPolling = () => {
-    stopPolling()
-    pollCount.value = 0
-    isPolling.value = false
-  }
-
-  // 监听 timeUntilEnd 变化
-  watch(() => store.value.timeUntilEnd, (newValue, oldValue) => {
-    console.log(`timeUntilEnd 变化: ${oldValue} -> ${newValue}`)
-    if (newValue) return
-    if ((newValue ?? 0) <= 0 && !isPolling.value && pollCount.value < maxPollCount.value) {
-      console.log('检测到时间结束，开始轮询')
-      startPolling()
-    } else if ((newValue ?? 0) > 0 && isPolling.value) {
-      console.log('检测到时间恢复，停止轮询')
-      resetPolling()
-    }
-  }, { immediate: true })
-
   // 组件挂载时初始化
   onMounted(async () => {
     try {
-      await store.value.fetchLotteryDataById(+props.id)
+      await store.fetchLotteryDataById(+props.id)
       // 如果初始状态就是时间结束，立即开始轮询
-      if ((store.value.timeUntilEnd ?? 0) <= 0) {
+      if ((store.timeUntilEnd ?? 0) <= 0) {
         startPolling()
       }
     } catch (error) {

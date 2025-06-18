@@ -5,15 +5,13 @@ import config from "@/libs/game/lhc";
 import Header from "@/components/Header.astro";
 ---
 
-
-
 <BaseLayout>
   <div class=" bg-white min-h-svh">
     <div slot="header" class="bg-theme text-white h-11">
       <Header title="新澳门⑥合彩" />
     </div>
     
-    <LotteryPanel client:load id="21" class="px-4 mt-4" />
+    <LotteryPanel client:load id="36" class="px-4 mt-4" />
     <div class="mt-2 border-t-[4px] border-b border-gray-200 p-4">
       {
         config.map((games) => (

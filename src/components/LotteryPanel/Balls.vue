@@ -22,12 +22,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useLotteryData } from "./common.ts"
-import { ZodiacnimalMap } from "@/libs/constants"
+import { lotteryStatusEnum, ZodiacnimalMap } from "@/libs/constants"
 import { getRandomNumber, getColorByNumber } from "@/libs/Common"
 
-const { store } = useLotteryData()
+const { store, onStateChange } = useLotteryData()
 
 // Props 定义
 interface Props {
@@ -59,7 +59,7 @@ function createiBallData(num?: string): iBallData {
   }
 }
 
-// 初始化球阵列
+// // 初始化球阵列
 function initializeBalls(): void {
   balls.value = Array.from({ length: props.ballLength }, () => createiBallData());
   if (props.showSpecialBall) specialBall.value = createiBallData()
@@ -74,22 +74,20 @@ function updateAllBalls(): void {
 // 根据开奖结果更新球
 function updateBallsWithResult(kaiText: string): void {
   const ballNums = kaiText.split(",")
-  
-  // 更新普通球
-  balls.value = balls.value.map((_, index) => {
+  const regularBalls = ballNums.slice(0, (props.showSpecialBall ? -1 : ballNums.length))
+  balls.value = regularBalls.map((_, index) => {
     const num = ballNums[index]
     return num ? createiBallData(num) : createiBallData()
   })
   
   if (!props.showSpecialBall) return
-  const specialNum = ballNums[props.ballLength]
+  const specialNum = ballNums[ballNums.length - 1]
   specialBall.value = specialNum ? createiBallData(specialNum) : createiBallData()
 }
 
 // 开始动画
 function startAnimation(): void {
   if (isAnimating.value) return
-  
   isAnimating.value = true
   updateAllBalls()
   animationInterval.value = setInterval(updateAllBalls, ANIMATION_DURATION)
@@ -119,20 +117,19 @@ function handleVisibilityChange(): void {
   }
 }
 
-// 监听 store 变化
-watch(
-  () => store.OpenLottery?.LastKai?.KaiText,
-  (kaiText) => {
-    if (kaiText) {
-      stopAnimation()
-      updateBallsWithResult(kaiText)
-    } else {
-      startAnimation()
-    }
-  },
-  { immediate: true }
-)
 initializeBalls()
+
+const unsubscribe = onStateChange((newState) => {
+  console.log({ newState })
+  if (newState === lotteryStatusEnum.END) {
+    startAnimation()
+  } else if (newState === lotteryStatusEnum.COUNTING) {
+    if (store.OpenLottery?.LastKai?.KaiText) {
+      stopAnimation()
+      updateBallsWithResult(store.OpenLottery.LastKai.KaiText)
+    }
+  }
+})
 // 组件挂载
 onMounted(() => {
   // 检查初始状态
@@ -148,12 +145,11 @@ onMounted(() => {
 // 组件卸载
 onUnmounted(() => {
   stopAnimation()
+  unsubscribe();
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 </script>
-
-
 
 <style scoped>
 .lottery-balls-container .ball {
