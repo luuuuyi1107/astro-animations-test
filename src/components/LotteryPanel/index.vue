@@ -8,7 +8,7 @@
         </div>
         <div class="text-red-400">余额: <span v-text="store.UserData?.Money || '0.00'"  />元</div>
       </div>
-      <Balls :ballLength="6" :showSpecialBall="false" />
+      <Balls :ballLength="6" :showSpecialBall="true" />
       <div class="border-y border-gray-200 py-2 mt-2 leading-none">
         <span id="newKaiGameID" class="font-[600] mr-1" v-text="store.OpenLottery?.NewKai?.GameID || '2025000'" />
         投注截止时间
