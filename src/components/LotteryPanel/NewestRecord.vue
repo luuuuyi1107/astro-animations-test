@@ -1,23 +1,10 @@
 <template>
   <div class="lottery-balls-container">  
-    <div class="flex items-center space-x-2">
-      <div 
-        v-for="(ball, index) in balls" 
-        :key="`ball-${index}`"
-        :class="['ball', ball.color]"
-      >
-        <div class="num">{{ ball.num }}</div>
-        <div class="text">{{ ball.text }}</div>
-      </div>
-      <template v-if="showSpecialBall && specialBall">
-        <div class="ball-separator">+</div>
-        
-        <div :class="['ball', specialBall.color]">
-          <div class="num">{{ specialBall.num }}</div>
-          <div class="text">{{ specialBall.text }}</div>
-        </div>
-      </template>
-    </div>
+    <LotteryBalls 
+      :balls="balls"
+      :special-ball="specialBall"
+      :show-special-ball="showSpecialBall"
+    />
   </div>
 </template>
 
@@ -25,25 +12,28 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useLotteryData } from "./common.ts"
 import { lotteryStatusEnum, ZodiacnimalMap } from "@/libs/constants"
-import { getRandomNumber, getColorByNumber } from "@/libs/Common"
+import { getRandomNumber } from "@/libs/Common"
+import LotteryBalls from './LotteryBalls.vue'
 
 const { store, onStateChange } = useLotteryData()
 
 // Props 定义
 interface Props {
   ballLength?: number
-  showSpecialBall?: boolean
+  showSpecialBall?: boolean | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   ballLength: 6,
   showSpecialBall: true
 })
+
 // 常数
 const ANIMATION_DURATION = 500 // 动画间隔时间 (毫秒)
+
 // 响应式数据
 const balls = ref<iBallData[]>([])
-const specialBall = ref<iBallData>()
+const specialBall = ref<iBallData | null>(null)
 const animationInterval = ref<NodeJS.Timeout | null>(null)
 const isAnimating = ref(false)
 
@@ -55,11 +45,10 @@ function createiBallData(num?: string): iBallData {
   return {
     num: _num,
     text: ZodiacnimalMap[numValue % 12] || "",
-    color: getColorByNumber(numValue)
   }
 }
 
-// // 初始化球阵列
+// 初始化球阵列
 function initializeBalls(): void {
   balls.value = Array.from({ length: props.ballLength }, () => createiBallData());
   if (props.showSpecialBall) specialBall.value = createiBallData()
@@ -68,7 +57,7 @@ function initializeBalls(): void {
 // 更新所有球
 function updateAllBalls(): void {
   balls.value = balls.value.map(() => createiBallData())
-  if (props.showSpecialBall) specialBall.value = specialBall.value = createiBallData()
+  if (props.showSpecialBall) specialBall.value = createiBallData()
 }
 
 // 根据开奖结果更新球
@@ -130,6 +119,7 @@ const unsubscribe = onStateChange((newState) => {
     }
   }
 })
+
 // 组件挂载
 onMounted(() => {
   // 检查初始状态
@@ -148,31 +138,8 @@ onUnmounted(() => {
   unsubscribe();
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
-
 </script>
 
 <style scoped>
-.lottery-balls-container .ball {
-  .num {
-    @apply w-5 h-5 rounded-full text-white text-center leading-5 text-xs bg-red-600;
-  }
-
-  &.blue .num {
-    @apply bg-blue-600;
-  }
-  &.green .num {
-    @apply bg-green-600;
-  }
-  &.red .num {
-    @apply bg-red-600;
-  }
-
-  .text {
-    @apply text-center min-h-5;
-  }
-}
-
-.ball-separator {
-  @apply mx-2 text-lg font-bold;
-}
+/* 主容器样式，如果需要的话可以在这里添加 */
 </style>

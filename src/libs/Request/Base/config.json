@@ -2,5 +2,10 @@
 	"get_push": {
 		"method": "get",
 		"uri": "User/GetPush"
+	},
+	"get_lotterys": {
+		"method": "get",
+		"uri": "Lottery/Lotterys"
 	}
+
 }

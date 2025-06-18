@@ -10,7 +10,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { title, id, config } = Astro.props;
+const { title, id, config, showSpecial } = Astro.props;
 ---
 
 <BaseLayout>
@@ -19,9 +19,9 @@ const { title, id, config } = Astro.props;
       <Header title={title} />
     </div>
     
-    <LotteryPanel client:load id={id} class="px-4 mt-4" />
+    <LotteryPanel client:load id={id} class="px-4 mt-4" showSpecial={showSpecial} />
 
-    <div class="mt-2 border-t-[4px] border-b border-gray-200 p-4">
+    <div class="mt-2 border-t-[5px] border-b border-gray-200/80 p-4">
       {
         config.map((games) => (
           <div class="mb-4">

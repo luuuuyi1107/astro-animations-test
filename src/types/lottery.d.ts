@@ -2,7 +2,7 @@
 type iBallData = {
   num: string
   text: string
-  color: string
+  color?: string
 }
 
 type iStoreState = {
@@ -35,4 +35,5 @@ type iGameData = {
   id: number,
   title: string,
   config: iGameConfig[],
+  showSpecial: boolean,
 }

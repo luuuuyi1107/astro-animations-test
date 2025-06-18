@@ -88,3 +88,18 @@ type iGetPush = {
 type iStateGetPush = {
   lottery: iGetPush | null
 }
+
+
+type iLotteryRecordData = {
+  
+  GameID: number
+  HashCode: string | null
+  LiangMian: string
+  OpenCode: string
+  OpenTime: string
+  Qsb: string
+  Sm: number
+  SmZodiac: string | null
+  Zodiac: string
+
+}

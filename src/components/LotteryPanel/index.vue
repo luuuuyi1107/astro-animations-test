@@ -1,6 +1,6 @@
 <template>
   <div :class="props.class">
-    <div class="data-container text-[13px]">
+    <div class="text-[13px]">
       <div class="flex justify-between items-center w-full">
         <div>
           <span id="lastKaiGameID" class="font-[600] mr-1">{{ store.OpenLottery?.LastKai?.GameID }}</span>
@@ -8,13 +8,19 @@
         </div>
         <div class="text-red-400">余额: <span v-text="store.UserData?.Money || '0.00'"  />元</div>
       </div>
-      <Balls :ballLength="6" :showSpecialBall="true" />
+      <NewestRecord :ballLength="6" :showSpecialBall="showSpecial || false"  />
       <div class="border-y border-gray-200 py-2 mt-2 leading-none">
         <span id="newKaiGameID" class="font-[600] mr-1">{{ store.OpenLottery?.NewKai?.GameID }}</span>
         投注截止时间 
         <Countdown id="countDown"  @countdown-end="startPolling"  />
       </div>
-      
+      <Tabs :tabs="tabs"  @change="onTabChange" />
+      <component 
+        :is="currentTab === 'tab2' ? GameRecord : currentTab === 'tab3' ? BetRecord : null" 
+        class="tab-content"
+        :id="props.id"
+        :showSpecialBall="showSpecial || false"
+      />
     </div>
   </div>
 </template>
@@ -22,13 +28,17 @@
 <script setup lang="ts">
   import { getSessionStorageData } from "@/libs/Common";
   import { ref, onMounted, onUnmounted } from 'vue'
-  import Balls  from '@/components/LotteryPanel/Balls.vue'
+  import NewestRecord  from '@/components/LotteryPanel/NewestRecord.vue'
   import Countdown from '@/components/LotteryPanel/Countdown.vue'
   import { lotteryStatusEnum } from "@/libs/constants";
   import { useLotteryData } from "./common.ts"
+  import Tabs from '@/components/Tabs.vue'
+  import BetRecord from "./BetRecord.vue"
+  import GameRecord from "./GameRecord.vue"
 
   type Props = {
     id: string | number
+    showSpecial?: boolean
     class?: string
   }
 
@@ -44,8 +54,13 @@
   const pollInterval = ref(3000) // 3秒
   const isPolling = ref(false)
   const pollTimer = ref<NodeJS.Timeout | null>(null)
+  const tabs = [
+    { key: 'tab1', name: '彩种介绍' },
+    { key: 'tab2', name: '开奖记录' },
+    { key: 'tab3', name: '投注记录' }
+  ]
+  const currentTab = ref('')
 
-  // 轮询函数
   const startPolling = () => {
     if (isPolling.value || pollCount.value >= maxPollCount.value) {
       return
@@ -81,6 +96,14 @@
     }
     isPolling.value = false
     console.log(`轮询结束，总共执行了 ${pollCount.value} 次`)
+  }
+
+  const onTabChange = (key: string | number) => {
+    if (key === 'tab1') {
+      window.open('/article', '_self')
+      return
+    }
+    currentTab.value = key as string
   }
 
   onMounted(async () => {
