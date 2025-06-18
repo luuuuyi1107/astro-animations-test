@@ -1,5 +1,5 @@
 <template>
-  <div v-if="betTab === 'credit'" class="mt-[11px] pb-12">
+  <div v-if="betTab === 'credit'" class="mt-[11px]">
     <div class="my-[6px] mx-[10px] border-l-[3px] border-l-[#f77e04] pl-[5px] text-[13px]">特码投注</div>
     <div class="flex items-start gap-[11px] px-[10px] py-[10px] w-full" v-if="betData.length > 0">
       <div class="flex-1 min-w-0">
