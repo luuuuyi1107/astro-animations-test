@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white fixed bottom-0 left-0 right-0 z-10 shadow-[0_-1px_3px_rgba(0,0,0,.1)]">
+    <div class="bg-white sticky bottom-0 left-0 right-0 z-10 shadow-[0_-1px_3px_rgba(0,0,0,.1)]">
         <div v-if="betTab === 'quick'" class="p-[10px] flex justify-between items-center">
             <div class="flex items-center gap-[10px] flex-1">
                 <div

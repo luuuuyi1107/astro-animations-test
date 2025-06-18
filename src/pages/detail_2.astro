@@ -9,7 +9,7 @@ import CreditBet from "@/components/LotteryGame/CreditBet.vue";
 ---
 
 <BaseLayout>
-  <div class=" bg-white min-h-svh">
+  <div class=" bg-white min-h-svh flex flex-col">
     <div slot="header" class="bg-[#f77e04] text-white h-11">
       <Header title="新澳门⑥合彩-特码投注" />
     </div>
@@ -17,7 +17,7 @@ import CreditBet from "@/components/LotteryGame/CreditBet.vue";
     <div class="mt-2 border-t-[4px]">
       <BetTab client:load />
     </div>
-    <div>
+    <div class="flex-1">
       <!-- 快速投注 -->
       <QuickBet client:load/>
       <!-- 信用投注 -->
