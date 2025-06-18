@@ -12,7 +12,7 @@ export const useLotteryData = (cachedData?: iGetPush) => {
   }
 
   const previousLotteryState = ref(lotteryStatusEnum.COUNTING)
-  const previousServerTime = ref("")
+  const previousGameID = ref("")
   const store = useLotteryStore()
   if (cachedData) store.setGetPush(cachedData)
   // 储存回调函数
@@ -20,9 +20,8 @@ export const useLotteryData = (cachedData?: iGetPush) => {
   const lotteryDataChangeCallbacks: LotteryDataChangeCallback[] = []
 
   store.$subscribe(() => {
-    if (store.ServerTime !== previousServerTime.value) {
-      previousServerTime.value = store.ServerTime
-      // 触发所有数据变化回调函数
+    if (store.OpenLottery?.NewKai?.GameID !== previousGameID.value) {
+      previousGameID.value = store.OpenLottery?.NewKai.GameID || ""
       lotteryDataChangeCallbacks.forEach(callback => {
         callback(store.OpenLottery as iOpenLottery)
       })

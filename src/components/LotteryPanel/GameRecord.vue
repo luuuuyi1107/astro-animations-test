@@ -20,21 +20,10 @@
       </div>
       
     </div>
-    <div v-if="records" class="flex justify-center items-center text-xs text-gray-500 bg-gray-100 py-3 cursor-pointer" @click="$emit('click')">
+    <div v-if="records" class="flex justify-center items-center text-xs text-gray-500 bg-gray-100 py-3 cursor-pointer gap-1" @click="$emit('click')">
       更多
-      <svg 
-        class="arrow-icon"
-        width="10" 
-        height="6" 
-        viewBox="0 0 10 6"
-      >
-        <path 
-          d="M0.5 0.5L5 5L9.5 0.5" 
-          stroke="#999" 
-          fill="none"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+      <svg class="rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 20" width="8.5" height="10">
+        <path id="Shape 1" class="s0" d="m9.5 0.4c-0.6-0.5-1.4-0.5-2 0l-7.1 7.1c-0.5 0.6-0.5 1.5 0 2 0.6 0.6 1.5 0.6 2 0l4.7-4.7v13.6c0 0.8 0.6 1.4 1.4 1.4 0.8 0 1.4-0.6 1.4-1.4v-13.6l4.7 4.7c0.5 0.6 1.4 0.6 2 0 0.5-0.6 0.5-1.4 0-2 0 0-7.1-7.1-7.1-7.1z"/>
       </svg>
     </div>
   </div>
@@ -42,11 +31,14 @@
 
 <script setup lang="ts">
 import { useApi } from "@/libs/Api";
-import { onMounted, ref } from "vue";
-import LotteryBalls from './LotteryBalls.vue'
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { ZodiacnimalMap } from "@/libs/constants"
 import { formatDate, getSessionStorageData, setSessionStorageData } from "@/libs/Common";
+import { useLotteryData } from "./common";
+import LotteryBalls from './LotteryBalls.vue'
 
+
+const { onLotteryDataChange } = useLotteryData()
 interface ProcessedLotteryRecord extends iLotteryRecordData {
   balls: iBallData[]
   specialBall: iBallData | null
@@ -108,6 +100,25 @@ const applyRecordData = (record: iLotteryRecordData): ProcessedLotteryRecord => 
   }
 }
 
+const unsubscribe = onLotteryDataChange(async () => {
+  try {
+    const data = await useApi("base").getLotterys({ lotteryid: +props.id,
+    date: 0,
+    PageIndex: 1,
+    PageSize: 5 });
+    if (data.Code !== 1) throw new Error(data.Message);
+    if (!data.Data || !Array.isArray(data.Data)) {
+      throw new Error("数据格式不正确");
+    }
+
+    setSessionStorageData(`lotteryRecords-${props.id}`, data.Data);
+    records.value = data.Data.map(applyRecordData)
+
+  } catch (error) {
+    console.error("获取数据失败:", error);
+  }
+});
+
 
 onMounted(() => {
   const cachedData = getSessionStorageData(`lotteryRecords-${props.id}`);
@@ -118,6 +129,10 @@ onMounted(() => {
   }
   
   fetchData()
+})
+
+onBeforeUnmount(() => {
+  if (unsubscribe) unsubscribe();
 })
 </script>
 

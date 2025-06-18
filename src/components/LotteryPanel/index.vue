@@ -28,13 +28,13 @@
 <script setup lang="ts">
   import { getSessionStorageData } from "@/libs/Common";
   import { ref, onMounted, onUnmounted } from 'vue'
-  import NewestRecord  from '@/components/LotteryPanel/NewestRecord.vue'
-  import Countdown from '@/components/LotteryPanel/Countdown.vue'
   import { lotteryStatusEnum } from "@/libs/constants";
   import { useLotteryData } from "./common.ts"
-  import Tabs from '@/components/Tabs.vue'
   import BetRecord from "./BetRecord.vue"
+  import Countdown from '@/components/LotteryPanel/Countdown.vue'
   import GameRecord from "./GameRecord.vue"
+  import NewestRecord  from '@/components/LotteryPanel/NewestRecord.vue'
+  import Tabs from '@/components/Tabs.vue'
 
   type Props = {
     id: string | number

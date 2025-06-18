@@ -44,7 +44,7 @@ function createiBallData(num?: string): iBallData {
   
   return {
     num: _num,
-    text: ZodiacnimalMap[numValue % 12] || "",
+    text: ZodiacnimalMap[numValue % 12 - 1] || "",
   }
 }
 
