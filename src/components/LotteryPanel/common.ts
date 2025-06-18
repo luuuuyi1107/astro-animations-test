@@ -6,8 +6,6 @@ type StateChangeCallback = (state: lotteryStatusEnum) => void
 type LotteryDataChangeCallback = (data: iOpenLottery) => void
 let initialPiniaSetup = false
 export const useLotteryData = (cachedData?: iGetPush) => {
-  
-
   if (!initialPiniaSetup) {
     initialPiniaSetup = true
     setupPinia()
@@ -16,7 +14,7 @@ export const useLotteryData = (cachedData?: iGetPush) => {
   const previousLotteryState = ref(lotteryStatusEnum.COUNTING)
   const previousServerTime = ref("")
   const store = useLotteryStore()
-  cachedData && store.setGetPush(cachedData)
+  if (cachedData) store.setGetPush(cachedData)
   // 储存回调函数
   const stateChangeCallbacks: StateChangeCallback[] = []
   const lotteryDataChangeCallbacks: LotteryDataChangeCallback[] = []
@@ -29,8 +27,6 @@ export const useLotteryData = (cachedData?: iGetPush) => {
         callback(store.OpenLottery as iOpenLottery)
       })
     }
-
-
 
     if (previousLotteryState.value !== store.LotteryState) {
       previousLotteryState.value = store.LotteryState as lotteryStatusEnum

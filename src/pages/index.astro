@@ -1,14 +1,24 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro"
+
+import * as games from "@/libs/games";
+
 ---
 
 <BaseLayout>
   <div class="p-4 w-full h-full bg-[#ff8a8a]">
     <div class="p-4 bg-white rounded-lg shadow-md">
-      <h1 class="text-3xl font-bold mb-4">主畫面</h1>
-      <div class="flex flex-col gap-4">
-        <a href="/detail_1" class="text-blue-600 underline overlay-link">新澳门⑥合彩</a>
-      </div>
+      <h1 class="text-3xl font-bold mb-4">主画面</h1>
+
+      {
+        Object.entries(games).map(([name, data]) => (
+          <div class="flex flex-col gap-4">
+            <a href={`/${name}`} class="text-blue-600 underline overlay-link">{ data.title }</a>
+          </div>
+        ))
+      }
+
+      
     </div>
   </div>
 </BaseLayout>

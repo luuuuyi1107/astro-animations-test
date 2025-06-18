@@ -17,3 +17,22 @@ type iStoreState = {
   LotteryState: keyof typeof lotteryStatusEnum | null
   LotteryRate: iLotteryRate | null
 }
+
+type iGameConfig = {
+  title: string,
+  list?: {
+    name?: string,
+    router?: (string | {
+            id: number;
+        })[],
+    lx?: number,
+    type?: string,
+    enabled?: boolean,
+  }[],
+}
+
+type iGameData = {
+  id: number,
+  title: string,
+  config: iGameConfig[],
+}

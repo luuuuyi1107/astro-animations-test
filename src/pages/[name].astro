@@ -1,12 +1,16 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro"
 import LotteryPanel from "@/components/LotteryPanel/index.vue";
-import { lhc } from "@/libs/games";
+import * as games from "@/libs/games";
 import Header from "@/components/Header.astro";
+export function getStaticPaths() {
+  return Object.entries(games).map(([name, data]) => ({
+    params: { name },
+    props: { ...data }
+  }));
+}
 
-const id = lhc.id;
-const title = lhc.title;
-const config = lhc.config;
+const { title, id, config } = Astro.props;
 ---
 
 <BaseLayout>
@@ -24,8 +28,8 @@ const config = lhc.config;
             <h2 class="text-sm mb-2 border-l-[2px] border-red-600 pl-2">{games.title}</h2>
             <div class="grid grid-cols-4 gap-2">
               {
-                games.list.map((game) => (
-                  game.lx === 1 && game.type === "1"
+                games?.list?.map((game) => (
+                  game.enabled
                     ? <a href="/detail_2" class="flex flex-col items-center bg-[#f1f1f1] rounded-sm p-2 text-sm leading-relaxed">
                         { game.name }
                       </a>
@@ -40,6 +44,5 @@ const config = lhc.config;
       }
     </div>
     <div class="h-4" />
-
   </div>
 </BaseLayout>

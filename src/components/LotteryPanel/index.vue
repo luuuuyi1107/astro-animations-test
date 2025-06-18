@@ -3,15 +3,15 @@
     <div class="data-container text-[13px]">
       <div class="flex justify-between items-center w-full">
         <div>
-          <span id="lastKaiGameID" class="font-[600] mr-1" v-text="store.OpenLottery?.LastKai?.GameID || '2025000'" />
+          <span id="lastKaiGameID" class="font-[600] mr-1">{{ store.OpenLottery?.LastKai?.GameID }}</span>
           期开奖结果
         </div>
         <div class="text-red-400">余额: <span v-text="store.UserData?.Money || '0.00'"  />元</div>
       </div>
       <Balls :ballLength="6" :showSpecialBall="true" />
       <div class="border-y border-gray-200 py-2 mt-2 leading-none">
-        <span id="newKaiGameID" class="font-[600] mr-1" v-text="store.OpenLottery?.NewKai?.GameID || '2025000'" />
-        投注截止时间
+        <span id="newKaiGameID" class="font-[600] mr-1">{{ store.OpenLottery?.NewKai?.GameID }}</span>
+        投注截止时间 
         <Countdown id="countDown"  @countdown-end="startPolling"  />
       </div>
       
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-  import { getSessionStorageData, setSessionStorageData } from "@/libs/Common";
+  import { getSessionStorageData } from "@/libs/Common";
   import { ref, onMounted, onUnmounted } from 'vue'
   import Balls  from '@/components/LotteryPanel/Balls.vue'
   import Countdown from '@/components/LotteryPanel/Countdown.vue'
@@ -28,7 +28,7 @@
   import { useLotteryData } from "./common.ts"
 
   type Props = {
-    id: string
+    id: string | number
     class?: string
   }
 
@@ -38,8 +38,6 @@
   })
 
   const cachedData = getSessionStorageData(`lottery-${props.id}`);
-  
-
   const { store } = useLotteryData(cachedData)
   const pollCount = ref(0)
   const maxPollCount = ref(10)
