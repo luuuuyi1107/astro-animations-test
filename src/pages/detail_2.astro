@@ -4,6 +4,8 @@ import Header from "@/components/Header.astro"
 import LotteryPanel from "@/components/LotteryPanel/index.vue";
 import BetFooter from "@/components/LotteryGame/BetFooter.vue";
 import BetTab from "@/components/LotteryGame/BetTab.vue";
+import QuickBet from "@/components/LotteryGame/QuickBet.vue";
+import CreditBet from "@/components/LotteryGame/CreditBet.vue";
 ---
 
 <BaseLayout>
@@ -12,9 +14,17 @@ import BetTab from "@/components/LotteryGame/BetTab.vue";
       <Header title="新澳门⑥合彩-特码投注" />
     </div>
     <LotteryPanel client:load id="21" class="px-4 mt-4" />
-    <div class="mt-2 border-t-[4px] border-b border-gray-200">
+    <div class="mt-2 border-t-[4px]">
       <BetTab client:load />
-    </div>    
+    </div>
+    <div>
+      <!-- 快速投注 -->
+      <QuickBet client:load/>
+      <!-- 信用投注 -->
+      <CreditBet client:load/>
+    </div>
+   
+    <!-- 投注底部操作區塊 -->
     <BetFooter client:load />
   </div>
 </BaseLayout>

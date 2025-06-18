@@ -91,10 +91,13 @@ type iStateGetPush = {
 
 type iStoreState = {
   betAmount: string
+  totalBets: number
   betTab: string
   betAmountList: Array<{ amount: number }>
+  clearBet: boolean
   ServerTime: string
   OpenLottery: iOpenLottery | null
+  LotteryRate: iLotteryRate | null
   UserData: iUserData | null
 }
 
