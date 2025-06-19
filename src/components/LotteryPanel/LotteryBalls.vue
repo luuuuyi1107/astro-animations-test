@@ -1,19 +1,19 @@
 <template>
   <div class="flex items-center space-x-2">
     <div 
-      v-for="(ball, index) in balls" 
+      v-for="(ball, index) in regularBalls" 
       :key="`ball-${index}`"
       :class="['ball', ball.color || getColorByNumber(+ball.num), ballClass || '']"
     >
       <div class="num">{{ ball.num }}</div>
-      <div class="text" :class="[textClass || '']">{{ ball.text }}</div>
+      <div v-if="store.currentGame.showText" class="text" :class="[textClass || '']">{{ ball.text }}</div>
     </div>
     
-    <template v-if="showSpecialBall && specialBall">
+    <template v-if="store.currentGame.showSpecial && specialBall">
       <div class="ball-separator">+</div>
       <div :class="['ball', specialBall.color || getColorByNumber(+specialBall.num), ballClass || '']">
         <div class="num">{{ specialBall.num }}</div>
-        <div class="text" :class="[textClass || '']">{{ specialBall.text }}</div>
+        <div v-if="store.currentGame.showText" class="text" :class="[textClass || '']">{{ specialBall.text }}</div>
       </div>
     </template>
   </div>
@@ -21,15 +21,36 @@
 
 <script setup lang="ts">
 import { getColorByNumber } from "@/libs/Common";
+import { useLotteryData } from "@/components/LotteryPanel/common";
+import { computed } from "vue";
+const { store } = useLotteryData()
+
+
+
 interface Props {
   balls: iBallData[]
-  specialBall?: iBallData | null
-  showSpecialBall?: boolean | null | undefined
   ballClass?: string
   textClass?: string
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  ballClass: '',
+  textClass: '',
+})
+
+const specialBall = computed(() => {
+  return store.currentGame?.showSpecial
+    ? props.balls.length > 0
+      ? props.balls[props.balls.length - 1]
+      : null
+    : null;
+});
+
+const regularBalls = computed(() => {
+  return store.currentGame?.showSpecial
+    ? props.balls.slice(0, props.balls.length - 1)
+    : props.balls;
+});
 </script>
 
 <style scoped>

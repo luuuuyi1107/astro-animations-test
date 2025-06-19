@@ -16,10 +16,11 @@ type iStoreState = {
   UserData: iUserData | null
   LotteryState: keyof typeof lotteryStatusEnum | null
   LotteryRate: iLotteryRate | null
+  currentGame: iGameDataTransObject
 }
 
 type iGameConfig = {
-  title: string,
+  title?: string,
   list?: {
     name?: string,
     router?: (string | {
@@ -36,6 +37,12 @@ type iGameData = {
   title: string,
   config: iGameConfig[],
   showSpecial: boolean,
+  showText: boolean,
+}
+
+type iGameDataTransObject = iGameData &{
+  name: string,
+  filter: iFilterData[] | null
 }
 
 interface iPaginationData {
@@ -51,5 +58,8 @@ interface iList<U> {
 
 interface ProcessedLotteryRecord extends iLotteryRecordData {
   balls: iBallData[]
-  specialBall: iBallData | null
 }
+
+type iFilterData = Record<'type'|'name', string>
+
+type iTabData = Record<'key'|'name', string>

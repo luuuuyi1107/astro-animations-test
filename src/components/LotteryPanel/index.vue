@@ -8,7 +8,7 @@
         </div>
         <div class="text-red-400">余额: <span v-text="store.UserData?.Money || '0.00'"  />元</div>
       </div>
-      <NewestRecord :ballLength="6" :showSpecialBall="showSpecial || false"  />
+      <NewestRecord :ballLength="7" :showSpecialBall="gameData.showSpecial || false"  />
       <div class="border-y border-gray-200 py-2 mt-2 leading-none">
         <span id="newKaiGameID" class="font-[600] mr-1">{{ store.OpenLottery?.NewKai?.GameID }}</span>
         投注截止时间 
@@ -18,8 +18,8 @@
       <component 
         :is="currentTab === 'tab2' ? GameRecord : currentTab === 'tab3' ? BetRecord : null" 
         class="tab-content"
-        :id="props.id"
-        :showSpecialBall="showSpecial || false"
+        :id="props.gameData.id"
+        :showSpecialBall="gameData.showSpecial || false"
       />
     </div>
   </div>
@@ -36,19 +36,14 @@
   import NewestRecord  from '@/components/LotteryPanel/NewestRecord.vue'
   import Tabs from '@/components/Tabs.vue'
 
-  type Props = {
-    id: string | number
-    showSpecial?: boolean
+  const props = withDefaults(defineProps<{
     class?: string
-  }
+    gameData: iGameDataTransObject
+  }>(), {class: ''});
 
-  const props = withDefaults(defineProps<Props>(), {
-    id: '21',
-    class: ''
-  })
-
-  const cachedData = getSessionStorageData(`lottery-${props.id}`);
+  const cachedData = getSessionStorageData(`lottery-${props.gameData.id || 21}`);
   const { store } = useLotteryData(cachedData)
+  store.setCurrentGame(props.gameData)
   const pollCount = ref(0)
   const maxPollCount = ref(10)
   const pollInterval = ref(3000) // 3秒
@@ -72,10 +67,11 @@
         pollCount.value++
         console.log(`执行第 ${pollCount.value} 次轮询`)
         // 重新获取数据
-        await store.fetchLotteryDataById(+props.id)
+        await store.fetchLotteryDataById(+props.gameData.id)
         // 检查是否需要继续轮询
         if ((store.timeUntilEnd ?? 0) <= 0 && pollCount.value < maxPollCount.value) {
           isPolling.value = false
+          store.setLotteryState(lotteryStatusEnum.OPENING)
           startPolling() // 递归调用下一次轮询
         } else {
           store.setLotteryState(lotteryStatusEnum.COUNTING)
@@ -105,11 +101,14 @@
 
   onMounted(async () => {
     try {
-      await store.fetchLotteryDataById(+props.id)
-      // 如果初始状态就是时间结束，立即开始轮询
+      await store.fetchLotteryDataById(+props.gameData.id)
       if ((store.timeUntilEnd ?? 0) <= 0) {
         startPolling()
+        store.setLotteryState(lotteryStatusEnum.END)
+      } else {
+        store.setLotteryState(lotteryStatusEnum.COUNTING)
       }
+
     } catch (error) {
       console.error('初始化数据失败:', error)
     }

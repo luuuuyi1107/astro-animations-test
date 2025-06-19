@@ -15,7 +15,7 @@
       <div>{{ formatDate(record.OpenTime, "HH:mm") }}</div>
       <div>{{ record.GameID }}期</div>
       <div v-if="computedDatas" class="flex-1">
-        <LotteryBalls :showSpecialBall="showSpecialBall" :balls="record.balls" :specialBall="record.specialBall" ballClass="flex-1 text-xs" textClass="text-gray-400 text-xs" />
+        <LotteryBalls :balls="record.balls" ballClass="flex-1 text-xs" textClass="text-gray-400 text-xs" />
       </div>
       
     </div>

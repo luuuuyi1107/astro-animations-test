@@ -28,8 +28,9 @@ export const useLotteryStore = defineStore('lottery', {
     ServerTime: "",
     OpenLottery: null,
     UserData: null,
-    LotteryState: lotteryStatusEnum.COUNTING,
+    LotteryState: lotteryStatusEnum.END,
     LotteryRate: null,
+    currentGame: {} as iGameDataTransObject
   } as iStoreState),
   actions: {
     setGetPush(data: iGetPush) {
@@ -62,6 +63,9 @@ export const useLotteryStore = defineStore('lottery', {
         this.clearBet = false;  
       }, 300);
 
+    },
+    setCurrentGame(game: iGameDataTransObject) {
+      this.currentGame = game;
     },
     async fetchLotteryDataById(lotteryid: number = 21) {
       const res = await useApi("base").getPush({ 

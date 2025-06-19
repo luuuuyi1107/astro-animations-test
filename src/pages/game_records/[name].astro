@@ -1,24 +1,23 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro"
-import * as games from "@/libs/games";
 import Header from "@/components/Header.astro";
 import RecordList from "./RecordList.vue";
+import { getStaticPaths } from "@/libs/StaticPages"
+export { getStaticPaths }
 
-export function getStaticPaths() {
-  return Object.entries(games).map(([name, data]) => ({
-    params: { name },
-    props: { ...data }
-  }));
-}
+const props = Astro.props;
+const { name } = Astro.params || "default";
+const data = { ...props, name }
 
-const { title, id, showSpecial } = Astro.props;
 ---
+
+
 
 <BaseLayout>
   <div class=" bg-white min-h-svh">
     <div slot="header" class="bg-theme text-white h-11 sticky top-0 z-10">
-      <Header title={title} />
+      <Header title={props.title} />
     </div>
-    <RecordList client:load id={id} class="px-4 mt-4" showSpecialBall={showSpecial} />
+    <RecordList client:load class="px-4 mt-4" gameData={data} />
   </div>
 </BaseLayout>

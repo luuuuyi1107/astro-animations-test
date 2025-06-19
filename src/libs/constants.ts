@@ -36,3 +36,60 @@ export enum lotteryStatusEnum {
   END,
   OPENING,
 }
+
+export enum BallType {
+  NB = 'recordNumber',
+  DX = 'recordDX',
+  DS = 'recordDS',
+  XT = 'recordXT'
+}
+
+export const filters: Record<string, iFilterData[]> = {
+  ssc: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.DX, name: "大小" },
+    { type: BallType.DS, name: "单双" },
+    { type: BallType.XT, name: "形态" },
+  ],
+  pks: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.DX, name: "大小" },
+    { type: BallType.DS, name: "单双" },
+    { type: BallType.XT, name: "冠军/龙虎" },
+  ],
+  pcdd: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.XT, name: "总和/形态" },
+  ],
+  lhc: [
+    { type: BallType.NB, name: "号码" },
+    { type: "recordTM", name: "特码属性" },
+  ],
+  syxw: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.DX, name: "大小" },
+    { type: BallType.DS, name: "单双" },
+    { type: BallType.XT, name: "总和" },
+  ],
+  klsf: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.DX, name: "大小" },
+    { type: BallType.DS, name: "单双" },
+    { type: BallType.XT, name: "形态" },
+  ],
+  klb: [{ type: BallType.NB, name: "号码" }],
+  ks: [{ type: BallType.NB, name: "号码" }],
+  qxc: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.DX, name: "大小" },
+    { type: BallType.DS, name: "单双" },
+  ],
+  fc3: [
+    { type: BallType.NB, name: "号码" },
+    { type: BallType.DX, name: "大小" },
+    { type: BallType.DS, name: "单双" },
+  ],
+  baccarat: [{ type: BallType.NB, name: "号码" }],
+}
+
+

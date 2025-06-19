@@ -84,11 +84,10 @@ export function usePagination<U, T extends U[], V>(
   let cahcedData = option.cacheKey
     ? getSessionStorageData(option.cacheKey) as {datas: T, paginate: iPaginationData, hasMore: boolean, timestamp: number}
     : null;
-
   if (cahcedData && (cahcedData.timestamp && Date.now() - cahcedData.timestamp > 1000 * 60 * 60) || cahcedData?.datas.length === 0) {
     cahcedData = null; // 如果缓存过期或数据为空，则清除缓存
   }
-  const datas = ref<T | undefined>(cahcedData?.datas ? cahcedData.datas : undefined)
+  const datas = ref<T | undefined>(cahcedData?.datas ? cahcedData.datas : [] as unknown as T)
   const computedDatas = computed<V[]>(() => {
     if (option.mapData) {
       return (datas.value || []).map((item: U) => option.mapData!(item) as V)
@@ -168,7 +167,6 @@ export function usePagination<U, T extends U[], V>(
       if (shouldAppend && resList.length) {
         const currentData = datas.value || ([] as unknown as T)
         datas.value = [...currentData, ...resList] as T
-        console.log('appendNextPage', datas.value)
       } else {
         datas.value = res.Data
       }
@@ -198,7 +196,6 @@ export function usePagination<U, T extends U[], V>(
   }
 
   const setCacheData = () => {
-    // getSessionStorageData, setSessionStorageData
     if (option.cacheKey) {
       setSessionStorageData(option.cacheKey, {
         datas: datas.value,
@@ -236,7 +233,7 @@ export function usePagination<U, T extends U[], V>(
 export const applyRecordData = (showSpecialBall: boolean, record: iLotteryRecordData): ProcessedLotteryRecord => {
   const ballNum = record.OpenCode.split(',').map(num => +num);
   if (ballNum.length === 0) {
-    return { ...record, balls: [], specialBall: null };
+    return { ...record, balls: [] };
   }
   const convertBallData = (num: number) => ({
     num: num.toString(),
@@ -244,13 +241,8 @@ export const applyRecordData = (showSpecialBall: boolean, record: iLotteryRecord
   });
 
   const balls = ballNum.slice(0, showSpecialBall ? -1 : ballNum.length).map(convertBallData);
-  const specialBall = showSpecialBall
-    ? ballNum.slice(-1).map(convertBallData)[0] || null
-    : null
-
   return {
     ...record,
-    balls,
-    specialBall
+    balls
   }
 }

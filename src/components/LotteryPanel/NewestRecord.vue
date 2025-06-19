@@ -2,8 +2,6 @@
   <div class="lottery-balls-container">  
     <LotteryBalls 
       :balls="balls"
-      :special-ball="specialBall"
-      :show-special-ball="showSpecialBall"
     />
   </div>
 </template>
@@ -24,7 +22,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  ballLength: 6,
+  ballLength: 7,
   showSpecialBall: true
 })
 
@@ -33,7 +31,6 @@ const ANIMATION_DURATION = 500 // 动画间隔时间 (毫秒)
 
 // 响应式数据
 const balls = ref<iBallData[]>([])
-const specialBall = ref<iBallData | null>(null)
 const animationInterval = ref<NodeJS.Timeout | null>(null)
 const isAnimating = ref(false)
 
@@ -50,27 +47,22 @@ function createiBallData(num?: string): iBallData {
 // 初始化球阵列
 function initializeBalls(): void {
   balls.value = Array.from({ length: props.ballLength }, () => createiBallData());
-  if (props.showSpecialBall) specialBall.value = createiBallData()
 }
 
 // 更新所有球
 function updateAllBalls(): void {
   balls.value = balls.value.map(() => createiBallData())
-  if (props.showSpecialBall) specialBall.value = createiBallData()
 }
 
 // 根据开奖结果更新球
 function updateBallsWithResult(kaiText: string): void {
   const ballNums = kaiText.split(",")
-  const regularBalls = ballNums.slice(0, (props.showSpecialBall ? -1 : ballNums.length))
-  balls.value = regularBalls.map((_, index) => {
+  balls.value = ballNums.map((_, index) => {
     const num = ballNums[index]
     return num ? createiBallData(num) : createiBallData()
   })
   
   if (!props.showSpecialBall) return
-  const specialNum = ballNums[ballNums.length - 1]
-  specialBall.value = specialNum ? createiBallData(specialNum) : createiBallData()
 }
 
 // 开始动画
@@ -108,6 +100,10 @@ function handleVisibilityChange(): void {
 initializeBalls()
 
 const unsubscribe = onStateChange((newState) => {
+
+  console.log({ newState })
+  console.log({ newState })
+  console.log({ newState })
   console.log({ newState })
   if (newState === lotteryStatusEnum.END) {
     startAnimation()

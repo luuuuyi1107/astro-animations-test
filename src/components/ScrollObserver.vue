@@ -1,23 +1,28 @@
 <template>
   <div>
     <slot />
+    <div v-if="!props.hasMore" class="text-center text-gray-300 text-xs pt-3 pb-6">{{ props.noMoreText }}</div>
     <div ref="lastElementRef" :style="{ height: '1px' }" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, nextTick } from 'vue';
-  const lastElementRef = ref<HTMLElement | null>(null)
+  import { onMounted, onUnmounted, ref, nextTick } from 'vue';
   let observer: IntersectionObserver | null = null
-
+  const lastElementRef = ref<HTMLElement | null>(null)
+  const props = withDefaults(defineProps<{
+    hasMore?: boolean,
+    noMoreText?: string
+  }>(), {
+    hasMore: true,
+    noMoreText: '别扯，到底了'
+  })
   // 创建观察器
   const createObserver = () => {
     observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) {
-        console.log(entries[0]);
+      if (entries[0]?.isIntersecting && props.hasMore) {
         emit('onBottom');
       }
-      // console.log('IntersectionObserver triggered:', entries);
     })
   }
 

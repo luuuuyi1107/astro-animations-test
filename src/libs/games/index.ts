@@ -6,6 +6,7 @@ const lhc: iGameData = {
   title: "新澳门⑥合彩",
   config: lhcConfig,
   showSpecial: true,
+  showText: true,
 }
   
 const ssc: iGameData = {
@@ -13,6 +14,7 @@ const ssc: iGameData = {
   title: "分分时时彩",
   config: sscConfig,
   showSpecial: false,
+  showText: false,
 }
 
 export { lhc, ssc }
