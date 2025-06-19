@@ -1,4 +1,4 @@
-import { lotteryStatusEnum } from '@/libs/constants'
+import { lotteryStatusEnum, ZodiacnimalMap } from '@/libs/constants'
 import { setupPinia } from '@/libs/pinia-setup'
 import { useLotteryStore } from '@/store/lottery'
 import { ref, computed, type Ref } from 'vue'
@@ -81,15 +81,19 @@ export function usePagination<U, T extends U[], V>(
   const { shouldAppend = false } = option
   
   // 响应式数据
-  const cahcedData = option.cacheKey
+  let cahcedData = option.cacheKey
     ? getSessionStorageData(option.cacheKey) as {datas: T, paginate: iPaginationData, hasMore: boolean, timestamp: number}
     : null;
+
+  if (cahcedData && (cahcedData.timestamp && Date.now() - cahcedData.timestamp > 1000 * 60 * 60) || cahcedData?.datas.length === 0) {
+    cahcedData = null; // 如果缓存过期或数据为空，则清除缓存
+  }
   const datas = ref<T | undefined>(cahcedData?.datas ? cahcedData.datas : undefined)
-  const computedDatas = computed(() => {
+  const computedDatas = computed<V[]>(() => {
     if (option.mapData) {
       return (datas.value || []).map((item: U) => option.mapData!(item) as V)
     }
-    return datas.value || ([] as unknown as T)
+    return []
   })
   const paginate: Ref<iPaginationData> = ref({
     ...defaultPagination,
@@ -159,12 +163,12 @@ export function usePagination<U, T extends U[], V>(
 
       if (shouldAppend && resList.length < paginate.value.PageSize) {
         hasMore.value = false
-        return
       }
 
       if (shouldAppend && resList.length) {
         const currentData = datas.value || ([] as unknown as T)
         datas.value = [...currentData, ...resList] as T
+        console.log('appendNextPage', datas.value)
       } else {
         datas.value = res.Data
       }
@@ -225,5 +229,28 @@ export function usePagination<U, T extends U[], V>(
     appendNextPage,
     hasNewChecker,
     renew,
+  }
+}
+
+
+export const applyRecordData = (showSpecialBall: boolean, record: iLotteryRecordData): ProcessedLotteryRecord => {
+  const ballNum = record.OpenCode.split(',').map(num => +num);
+  if (ballNum.length === 0) {
+    return { ...record, balls: [], specialBall: null };
+  }
+  const convertBallData = (num: number) => ({
+    num: num.toString(),
+    text: ZodiacnimalMap[num % 12] || num.toString(),
+  });
+
+  const balls = ballNum.slice(0, showSpecialBall ? -1 : ballNum.length).map(convertBallData);
+  const specialBall = showSpecialBall
+    ? ballNum.slice(-1).map(convertBallData)[0] || null
+    : null
+
+  return {
+    ...record,
+    balls,
+    specialBall
   }
 }

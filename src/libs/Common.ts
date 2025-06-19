@@ -1,4 +1,5 @@
 import { colorMap, colorEnum } from './constants';
+import * as games from "@/libs/games"
 export function parseJsonDate(jsonDate: string | undefined): Date {
   if (!jsonDate) return new Date();
   // 提取毫秒数
@@ -85,4 +86,13 @@ export function formatDate(date: Date | string | number, format?: string): strin
   if (days < 30) return `${days}天前`;
   if (days < 365) return `${Math.floor(days / 30)}个月前`;
   return `${Math.floor(days / 365)}年前`;
+}
+
+export function getGameDataById(id: number) {
+  const [key, game] = Object.entries(games).find(([_, game]) => game.id === id) || [  ];
+  if (!game) {
+    throw new Error(`Game with ID ${id} not found`);
+  }
+  
+  return { key, game };
 }

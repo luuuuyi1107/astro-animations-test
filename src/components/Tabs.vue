@@ -1,8 +1,8 @@
 <template>
   <div 
-    class="flex text-sm overflow-auto pt-3 pb-1" 
     ref="el" 
     :class="{ 
+      [props.class]: true,
       [props.bgClass]: true, 
       [isOverflow ? 'justify-start' : 'justify-center']: true 
     }"
@@ -16,7 +16,7 @@
       }"
       @click="onClick(tab.key as string | number)"
     >
-      <div>{{ tab.name }}</div>
+      <div class="tab-name">{{ tab.name }}</div>
     </div>
     
     <template v-for="tab in props.tabs">
@@ -36,11 +36,15 @@ const props = withDefaults(defineProps<{
   bgClass?: string
   tabClass?: string
   activeClass?: string
+  class?: string
   tabs: Record<string, string | number>[]
+  shouldToggle?: boolean
 }>(), {
   bgClass: "bg-white",
   tabClass: "flex-1 text-center cursor-pointer text-xs border-l border-gray-300 first:border-l-0 leading-none",
   activeClass: "text-theme font-[600]",
+  shouldToggle: true,
+  class: "flex text-sm overflow-auto pt-3 pb-1",
 })
 
 const emit = defineEmits<{
@@ -49,6 +53,8 @@ const emit = defineEmits<{
 const model = defineModel()
 const el = ref<HTMLElement>()
 const onClick = (key: string | number) => {
+  if (!props.shouldToggle && model.value === key) return
+
   const _key = model.value === key ? "" : key
   model.value = _key
   emit("change", _key)

@@ -48,3 +48,8 @@ interface iList<U> {
   list?: U[]
   List?: U[]
 }
+
+interface ProcessedLotteryRecord extends iLotteryRecordData {
+  balls: iBallData[]
+  specialBall: iBallData | null
+}

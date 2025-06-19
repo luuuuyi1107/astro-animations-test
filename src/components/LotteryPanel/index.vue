@@ -14,7 +14,7 @@
         投注截止时间 
         <Countdown id="countDown"  @countdown-end="startPolling"  />
       </div>
-      <Tabs :tabs="tabs"  @change="onTabChange" />
+      <Tabs :tabs="tabs" v-model="currentTab" @change="onTabChange" />
       <component 
         :is="currentTab === 'tab2' ? GameRecord : currentTab === 'tab3' ? BetRecord : null" 
         class="tab-content"
@@ -99,11 +99,8 @@
   }
 
   const onTabChange = (key: string | number) => {
-    if (key === 'tab1') {
-      window.open('/article', '_self')
-      return
-    }
-    currentTab.value = key as string
+    if (key !== 'tab1') return
+    window.open('/article', '_self')
   }
 
   onMounted(async () => {
