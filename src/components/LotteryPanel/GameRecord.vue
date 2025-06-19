@@ -1,26 +1,25 @@
 <template>
   <div class="mt-1">
 
-    <div 
-        v-if="isLoading" 
+    <div
+        v-if="loadRef && computedDatas.length === 0"
         class="loading-container"
       >
         <div class="spinner"></div>
       </div>
 
-    <div v-for="(record, index) in records" 
+    <div v-for="(record, index) in computedDatas"
           :key="record.GameID + index"
           class="flex items-center bg-gray-100 odd:bg-white space-x-2 py-1"
-          
     >
       <div>{{ formatDate(record.OpenTime, "HH:mm") }}</div>
       <div>{{ record.GameID }}期</div>
-      <div v-if="records" class="flex-1">
+      <div v-if="computedDatas" class="flex-1">
         <LotteryBalls :showSpecialBall="showSpecialBall" :balls="record.balls" :specialBall="record.specialBall" ballClass="flex-1 text-xs" textClass="text-gray-400 text-xs" />
       </div>
       
     </div>
-    <div v-if="records" class="flex justify-center items-center text-xs text-gray-500 bg-gray-100 py-3 cursor-pointer gap-1" @click="$emit('click')">
+    <div v-if="computedDatas" class="flex justify-center items-center text-xs text-gray-500 bg-gray-100 py-3 cursor-pointer gap-1" @click="$emit('click')">
       更多
       <svg class="rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 20" width="8.5" height="10">
         <path id="Shape 1" class="s0" d="m9.5 0.4c-0.6-0.5-1.4-0.5-2 0l-7.1 7.1c-0.5 0.6-0.5 1.5 0 2 0.6 0.6 1.5 0.6 2 0l4.7-4.7v13.6c0 0.8 0.6 1.4 1.4 1.4 0.8 0 1.4-0.6 1.4-1.4v-13.6l4.7 4.7c0.5 0.6 1.4 0.6 2 0 0.5-0.6 0.5-1.4 0-2 0 0-7.1-7.1-7.1-7.1z"/>
@@ -33,10 +32,9 @@
 import { useApi } from "@/libs/Api";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { ZodiacnimalMap } from "@/libs/constants"
-import { formatDate, getSessionStorageData, setSessionStorageData } from "@/libs/Common";
-import { useLotteryData } from "./common";
+import { formatDate } from "@/libs/Common";
+import { useLotteryData, usePagination } from "./common";
 import LotteryBalls from './LotteryBalls.vue'
-
 
 const { onLotteryDataChange } = useLotteryData()
 interface ProcessedLotteryRecord extends iLotteryRecordData {
@@ -52,31 +50,6 @@ const props = withDefaults(defineProps<{
   showSpecialBall: true
 });
 
-const records = ref<ProcessedLotteryRecord[] | null>(null);
-const isLoading = ref(false);
-
-const fetchData = async () => {
-  
-  try {
-    const data = await useApi("base").getLotterys({ lotteryid: +props.id,
-    date: 0,
-    PageIndex: 1,
-    PageSize: 5 });
-    if (data.Code !== 1) throw new Error(data.Message);
-    if (!data.Data || !Array.isArray(data.Data)) {
-      throw new Error("数据格式不正确");
-    }
-
-    setSessionStorageData(`lotteryRecords-${props.id}`, data.Data);
-    records.value = data.Data.map(applyRecordData)
-
-  } catch (error) {
-    console.error("获取数据失败:", error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
 const applyRecordData = (record: iLotteryRecordData): ProcessedLotteryRecord => {
   const ballNum = record.OpenCode.split(',').map(num => +num);
   if (ballNum.length === 0) {
@@ -84,9 +57,8 @@ const applyRecordData = (record: iLotteryRecordData): ProcessedLotteryRecord => 
   }
   const convertBallData = (num: number) => ({
     num: num.toString(),
-    text: ZodiacnimalMap[num % 12 - 1] || num.toString(),
+    text: ZodiacnimalMap[num % 12] || num.toString(),
   });
-
 
   const balls = ballNum.slice(0, props.showSpecialBall ? -1 : ballNum.length).map(convertBallData);
   const specialBall = props.showSpecialBall
@@ -100,35 +72,22 @@ const applyRecordData = (record: iLotteryRecordData): ProcessedLotteryRecord => 
   }
 }
 
-const unsubscribe = onLotteryDataChange(async () => {
-  try {
-    const data = await useApi("base").getLotterys({ lotteryid: +props.id,
-    date: 0,
-    PageIndex: 1,
-    PageSize: 5 });
-    if (data.Code !== 1) throw new Error(data.Message);
-    if (!data.Data || !Array.isArray(data.Data)) {
-      throw new Error("数据格式不正确");
-    }
-
-    setSessionStorageData(`lotteryRecords-${props.id}`, data.Data);
-    records.value = data.Data.map(applyRecordData)
-
-  } catch (error) {
-    console.error("获取数据失败:", error);
+const { computedDatas, refresh, loadRef } = usePagination(
+  (pagination: iPaginationData) => useApi("base").getLotterys(+props.id, pagination), 
+  { PageIndex: 1, PageSize: 5 },
+  {
+    cacheKey: `lotteryRecords-${props.id}`,
+    mapData: applyRecordData,
   }
+);
+
+const unsubscribe = onLotteryDataChange(async () => {
+  refresh()
 });
 
 
 onMounted(() => {
-  const cachedData = getSessionStorageData(`lotteryRecords-${props.id}`);
-  if (cachedData) {
-    records.value = cachedData.map(applyRecordData);
-  } else {
-    isLoading.value = true;
-  }
-  
-  fetchData()
+  refresh()
 })
 
 onBeforeUnmount(() => {

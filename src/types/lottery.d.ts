@@ -37,3 +37,14 @@ type iGameData = {
   config: iGameConfig[],
   showSpecial: boolean,
 }
+
+interface iPaginationData {
+  PageIndex: number
+  PageSize: number
+  PageCount?: number
+}
+
+interface iList<U> {
+  list?: U[]
+  List?: U[]
+}

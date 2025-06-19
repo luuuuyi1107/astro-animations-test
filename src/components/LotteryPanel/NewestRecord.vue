@@ -40,11 +40,10 @@ const isAnimating = ref(false)
 // 创建球数据
 function createiBallData(num?: string): iBallData {
   const _num = num || getRandomNumber(1, 49).toString()
-  const numValue = parseInt(_num)
-  
+
   return {
     num: _num,
-    text: ZodiacnimalMap[numValue % 12 - 1] || "",
+    text: ZodiacnimalMap[+_num % 12] || "",
   }
 }
 
