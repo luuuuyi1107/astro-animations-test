@@ -50,13 +50,13 @@ export const useLotteryStore = defineStore('lottery', {
     },
     setBetTab(tab: string) {
       this.betTab = tab;
-      this.betAmount = '0';
+      this.betAmount = '';
       this.totalBets = 0;
     },
     setClearBet(clearBet: boolean) {
       if (clearBet) {
         this.clearBet = clearBet;
-        this.betAmount = '0';
+        this.betAmount = '';
         this.totalBets = 0;
       }
       setTimeout(() => {

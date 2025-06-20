@@ -8,7 +8,7 @@
         </div>
         <div class="text-red-400">余额: <span v-text="store.UserData?.Money || '0.00'"  />元</div>
       </div>
-      <NewestRecord :ballLength="7" :showSpecialBall="gameData.showSpecial || false"  />
+      <NewestRecord :ballLength="7" :showSpecialBall="gameData?.showSpecial || false"  />
       <div class="border-y border-gray-200 py-2 mt-2 leading-none">
         <span id="newKaiGameID" class="font-[600] mr-1">{{ store.OpenLottery?.NewKai?.GameID }}</span>
         投注截止时间 
@@ -18,8 +18,8 @@
       <component 
         :is="currentTab === 'tab2' ? GameRecord : currentTab === 'tab3' ? BetRecord : null" 
         class="tab-content"
-        :id="props.gameData.id"
-        :showSpecialBall="gameData.showSpecial || false"
+        :id="props.gameData?.id"
+        :showSpecialBall="gameData?.showSpecial || false"
       />
     </div>
   </div>
@@ -41,7 +41,9 @@
     gameData: iGameDataTransObject
   }>(), {class: ''});
 
-  const cachedData = getSessionStorageData(`lottery-${props.gameData.id || 21}`);
+  console.log(props)
+  
+  const cachedData = getSessionStorageData(`lottery-${props?.gameData?.id || 21}`);
   const { store } = useLotteryData(cachedData)
   store.setCurrentGame(props.gameData)
   const pollCount = ref(0)

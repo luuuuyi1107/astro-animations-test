@@ -6,14 +6,14 @@
       :class="['ball', ball.color || getColorByNumber(+ball.num), ballClass || '']"
     >
       <div class="num">{{ ball.num }}</div>
-      <div v-if="store.currentGame.showText" class="text" :class="[textClass || '']">{{ ball.text }}</div>
+      <div v-if="store.currentGame?.showText" class="text" :class="[textClass || '']">{{ ball.text }}</div>
     </div>
     
-    <template v-if="store.currentGame.showSpecial && specialBall">
+    <template v-if="store.currentGame?.showSpecial && specialBall">
       <div class="ball-separator">+</div>
       <div :class="['ball', specialBall.color || getColorByNumber(+specialBall.num), ballClass || '']">
         <div class="num">{{ specialBall.num }}</div>
-        <div v-if="store.currentGame.showText" class="text" :class="[textClass || '']">{{ specialBall.text }}</div>
+        <div v-if="store.currentGame?.showText" class="text" :class="[textClass || '']">{{ specialBall.text }}</div>
       </div>
     </template>
   </div>
